@@ -61,6 +61,16 @@ Launch at login: `brew services start barrly`, Settings › Advanced, or from Ae
 
 Light/dark, Reduce Transparency, Increase Contrast and Reduce Motion are followed live.
 
+## App icon
+
+`Resources/Icon/source.png` is the artwork; `scripts/make-icon.swift` crops it to the macOS icon
+grid and writes `Resources/AppIcon.icns`:
+
+```sh
+swiftc -O scripts/make-icon.swift -o /tmp/make-icon && /tmp/make-icon Resources/Icon/source.png Resources/Icon \
+  && iconutil -c icns Resources/Icon/AppIcon.iconset -o Resources/AppIcon.icns
+```
+
 ## Releasing
 
 ```sh

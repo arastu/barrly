@@ -10,6 +10,8 @@ if [ -n "$RES" ] && [ -d "$RES" ]; then cp -R "$RES"/. "$NEW/Contents/Resources/
 # SwiftPM resource bundles (Name_Target.bundle) live next to the executable; bring them along.
 for b in "$(dirname "$EXE")"/*.bundle; do case "$b" in *Tests.bundle) ;; *) [ -d "$b" ] && cp -R "$b" "$NEW/Contents/Resources/" ;; esac; done
 PLIST="$(dirname "$0")/../Resources/${NAME}.plist"
+ICNS="$(dirname "$0")/../Resources/AppIcon.icns"
+[ -f "$ICNS" ] && cp "$ICNS" "$NEW/Contents/Resources/AppIcon.icns"
 if [ -f "$PLIST" ]; then
   sed -e "s/__NAME__/$NAME/g" -e "s/__BID__/$BID/g" "$PLIST" > "$NEW/Contents/Info.plist"
 else
