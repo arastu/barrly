@@ -85,6 +85,14 @@ struct ResolvedTheme: Sendable, Hashable {
   var increaseContrast: Bool
   var reduceMotion: Bool
 
+  /// Accent used for text/icons that carry state. Light glass over bright wallpapers needs a
+  /// deeper shade than the raw palette; Increase Contrast falls back to the label colour.
+  func stateColor(_ token: AccentToken) -> Color {
+    if increaseContrast { return palette.text }
+    let c = palette.accent(token)
+    return isDark ? c : c.mix(with: .black, by: 0.28)
+  }
+
   var hoverAnimation: Animation? { reduceMotion ? nil : .easeInOut(duration: 0.2) }
   var stateAnimation: Animation? { reduceMotion ? nil : .easeInOut(duration: 0.25) }
 

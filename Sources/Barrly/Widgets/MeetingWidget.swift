@@ -11,10 +11,14 @@ struct MeetingWidget: View {
     let cal = runtime.calendar
     let now = runtime.clock.now
     if let m = cal.meeting {
-      let (label, color) = Self.describe(m, now: now, clip: spec.options.clipChars, theme: theme)
+      let (title, detail, color) = Self.describe(m, now: now, clip: spec.options.clipChars, theme: theme)
       WidgetCell(spec: spec, onClick: { join(m) }) {
-        IconLabel(symbol: "video.fill", label: label, iconColor: theme.palette.accent(.lavender), labelFont: theme.fonts.persian)
-          .foregroundStyle(color)
+        HStack(spacing: theme.metrics.iconLabelSpacing) {
+          Image(systemName: "video.fill").font(theme.fonts.icon).foregroundStyle(color)
+          // Title stays in the label colour for legibility; only the state (time) carries the tint.
+          Text(title).font(theme.fonts.persian).foregroundStyle(theme.palette.text).lineLimit(1)
+          Text("· " + detail).font(theme.fonts.label).foregroundStyle(color).lineLimit(1)
+        }
       }
       .onHover { hovering = $0 }
       .hoverPopup(isPresented: hovering, theme: theme) {
@@ -28,13 +32,13 @@ struct MeetingWidget: View {
     }
   }
 
-  static func describe(_ m: Meeting, now: Date, clip: Int, theme: ResolvedTheme) -> (String, Color) {
+  static func describe(_ m: Meeting, now: Date, clip: Int, theme: ResolvedTheme) -> (title: String, detail: String, color: Color) {
     let title = m.title.count > clip ? String(m.title.prefix(max(1, clip - 1))) + "…" : m.title
     func fmt(_ secs: TimeInterval) -> String { let mins = max(0, Int(secs / 60)); return mins >= 60 ? "\(mins / 60)h\(String(format: "%02d", mins % 60))m" : "\(mins)m" }
     switch m.phase {
-    case .inProgress: return ("\(title) · \(fmt(m.end.timeIntervalSince(now))) left", theme.palette.accent(.peach))
-    case .soon: return ("\(title) · in \(fmt(m.start.timeIntervalSince(now)))", theme.palette.accent(.yellow))
-    case .later: return ("\(title) · \(m.start.formatted(date: .omitted, time: .shortened))", theme.palette.accent(.lavender))
+    case .inProgress: return (title, "\(fmt(m.end.timeIntervalSince(now))) left", theme.stateColor(.peach))
+    case .soon: return (title, "in \(fmt(m.start.timeIntervalSince(now)))", theme.stateColor(.yellow))
+    case .later: return (title, m.start.formatted(date: .omitted, time: .shortened), theme.stateColor(.lavender))
     }
   }
 

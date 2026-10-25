@@ -88,8 +88,8 @@ struct WifiWidget: View {
     }()
     WidgetCell(spec: spec, onClick: { copy(n.ipv4) }) {
       IconLabel(symbol: n.connected ? (n.isWifi ? "wifi" : "network") : "wifi.slash", label: label,
-                iconColor: n.connected ? (flash ? theme.palette.accent(.green) : nil) : theme.palette.text3)
-      .foregroundStyle(flash ? theme.palette.accent(.green) : (n.connected ? theme.palette.text : theme.palette.text3))
+                iconColor: n.connected ? (flash ? theme.stateColor(.green) : nil) : theme.palette.text3)
+      .foregroundStyle(flash ? theme.stateColor(.green) : (n.connected ? theme.palette.text : theme.palette.text3))
     }
   }
   private func copy(_ ip: String?) {
@@ -109,7 +109,7 @@ struct BatteryWidget: View {
     let symbol: String = b.isCharging || (b.isPluggedIn && b.percent >= 95) ? "bolt.fill"
       : b.percent >= 88 ? "battery.100percent" : b.percent >= 63 ? "battery.75percent"
       : b.percent >= 38 ? "battery.50percent" : b.percent >= 13 ? "battery.25percent" : "battery.0percent"
-    let color: Color? = b.isCharging ? theme.palette.accent(.teal) : b.percent <= spec.options.warnBelow ? theme.palette.accent(.red) : nil
+    let color: Color? = b.isCharging ? theme.stateColor(.teal) : b.percent <= spec.options.warnBelow ? theme.stateColor(.red) : nil
     WidgetCell(spec: spec) {
       IconLabel(symbol: symbol, label: spec.options.showPercent ? "\(b.percent)%" : nil, iconColor: color)
     }
