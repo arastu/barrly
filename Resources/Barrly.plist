@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleExecutable</key><string>__NAME__</string>
+  <key>CFBundleIdentifier</key><string>__BID__</string>
+  <key>CFBundleName</key><string>__NAME__</string>
+  <key>CFBundleDisplayName</key><string>Barrly</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>LSMinimumSystemVersion</key><string>26.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSSupportsAutomaticTermination</key><false/>
+  <key>NSSupportsSuddenTermination</key><false/>
+  <key>CFBundleURLTypes</key>
+  <array><dict>
+    <key>CFBundleURLName</key><string>Barrly</string>
+    <key>CFBundleURLSchemes</key><array><string>barrly</string></array>
+  </dict></array>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>Barrly shows your current and next meeting in the bar.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Barrly asks Music or Spotify what is playing when the system now-playing service is unavailable.</string>
+</dict></plist>

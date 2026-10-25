@@ -1,0 +1,9 @@
+.build/
+Vendor/build/
+Vendor/mediaremote-adapter/
+*.xcodeproj
+.DS_Store
+.swiftpm/
+Spikes/*/.build/
+Spikes/aerospace/socket
+Spikes/aerospace/sub.log
