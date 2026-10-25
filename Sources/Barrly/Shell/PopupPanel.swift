@@ -2,7 +2,8 @@ import AppKit
 import SwiftUI
 
 /// A small non-activating glass panel anchored under a bar item (meeting details, etc.).
-/// Child of the bar panel so it follows it across displays and Spaces; never takes focus.
+/// Deliberately NOT a child window of the bar: child windows inherit the parent's level, and the
+/// bar sits below normal windows. This panel floats at pop-up-menu level, above everything.
 @MainActor
 final class PopupPanel {
   static let shared = PopupPanel()
@@ -30,11 +31,11 @@ final class PopupPanel {
     let x = anchor.midX - size.width / 2
     let y = anchor.minY - size.height - 6
     p.setFrame(CGRect(x: x, y: y, width: size.width, height: size.height), display: true)
-    if let parent, p.parent !== parent { p.parent?.removeChildWindow(p); parent.addChildWindow(p, ordered: .above) }
+    _ = parent
     p.orderFrontRegardless()
   }
 
-  func hide() { if let panel { panel.parent?.removeChildWindow(panel); panel.orderOut(nil) } }
+  func hide() { panel?.orderOut(nil) }
 }
 
 /// Reports the on-screen frame of the view it is attached to.

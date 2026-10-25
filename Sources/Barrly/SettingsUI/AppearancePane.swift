@@ -10,6 +10,7 @@ struct AppearancePane: View {
         Slider(value: $store.settings.appearance.margin, in: 0...24, step: 1) { Text("Side margin: \(Int(store.settings.appearance.margin)) pt") }
         Slider(value: $store.settings.appearance.yOffset, in: 0...24, step: 1) { Text("Top offset: \(Int(store.settings.appearance.yOffset)) pt") }
         Toggle("Always on top of windows", isOn: $store.settings.appearance.alwaysOnTop)
+        Text("Stays below the system menu bar, so an auto-hidden menu bar still slides over it.").font(.caption).foregroundStyle(.secondary)
         Toggle("Keep below the notch", isOn: $store.settings.appearance.respectNotch)
         Picker("Displays", selection: $store.settings.appearance.displays) { Text("All displays").tag(DisplaySelection.all); Text("Main display only").tag(DisplaySelection.main) }
       }

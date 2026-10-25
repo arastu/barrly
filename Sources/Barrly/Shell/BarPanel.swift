@@ -19,7 +19,10 @@ final class BarPanel: NSPanel {
     acceptsMouseMovedEvents = true
   }
 
+  /// Default: just above the desktop, below app windows (backstop menu level).
+  /// Always on top: floating level — above app windows but still below the system menu bar,
+  /// so an auto-hidden menu bar can slide over the bar when revealed.
   func apply(topmost: Bool) {
-    level = topmost ? .statusBar : NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.backstopMenu)))
+    level = topmost ? .floating : NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.backstopMenu)))
   }
 }
