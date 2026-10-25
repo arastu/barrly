@@ -38,21 +38,22 @@ final class PopupPanel {
   func hide() { panel?.orderOut(nil) }
 }
 
-/// Reports the on-screen frame of the view it is attached to.
-private struct ScreenFrameReader: NSViewRepresentable {
-  var onChange: (CGRect, NSWindow?) -> Void
-  func makeNSView(context: Context) -> TrackerView { let v = TrackerView(); v.onChange = onChange; return v }
-  func updateNSView(_ v: TrackerView, context: Context) { v.onChange = onChange; v.report() }
-  final class TrackerView: NSView {
-    var onChange: ((CGRect, NSWindow?) -> Void)? = nil
-    override func layout() { super.layout(); report() }
-    override func viewDidMoveToWindow() { super.viewDidMoveToWindow(); report() }
-    func report() {
-      guard let window else { return }
-      let rect = window.convertToScreen(convert(bounds, to: nil))
-      onChange?(rect, window)
-    }
+/// Keeps a handle to an invisible NSView inside the SwiftUI hierarchy so the on-screen frame
+/// of the host view can be read at the moment it is needed (after layout), not when attached.
+@MainActor
+final class AnchorBox {
+  weak var view: NSView? = nil
+  var screenFrame: CGRect? {
+    guard let view, let window = view.window else { return nil }
+    return window.convertToScreen(view.convert(view.bounds, to: nil))
   }
+  var window: NSWindow? { view?.window }
+}
+
+private struct AnchorView: NSViewRepresentable {
+  let box: AnchorBox
+  func makeNSView(context: Context) -> NSView { let v = NSView(); box.view = v; return v }
+  func updateNSView(_ v: NSView, context: Context) { box.view = v }
 }
 
 extension View {
@@ -66,14 +67,17 @@ private struct HoverPopupModifier<V: View>: ViewModifier {
   var isPresented: Bool
   var theme: ResolvedTheme
   var content: () -> V
-  @ViewState private var frame: CGRect = .zero
-  @ViewState private var window: NSWindow? = nil
+  @ViewState private var box = AnchorBox()
 
   func body(content base: Content) -> some View {
     base
-      .background(ScreenFrameReader { r, w in frame = r; window = w })
+      .background(AnchorView(box: box))
       .onChange(of: isPresented) { _, on in
-        if on { PopupPanel.shared.show(content().padding(14), anchor: frame, parent: window, theme: theme) } else { PopupPanel.shared.hide() }
+        if on, let frame = box.screenFrame {
+          PopupPanel.shared.show(content().padding(14), anchor: frame, parent: box.window, theme: theme)
+        } else {
+          PopupPanel.shared.hide()
+        }
       }
       .onDisappear { if isPresented { PopupPanel.shared.hide() } }
   }
