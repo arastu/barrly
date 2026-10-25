@@ -61,6 +61,12 @@ Launch at login: `brew services start barrly`, Settings › Advanced, or from Ae
 
 Light/dark, Reduce Transparency, Increase Contrast and Reduce Motion are followed live.
 
+## Releasing
+
+```sh
+scripts/release.sh 0.2.0   # tests, version bump, tag, push, GitHub release, tap formula, brew upgrade
+```
+
 ## Phase 0 spikes
 
 See `Spikes/RESULTS.md` for what was verified on macOS 27 before building.
