@@ -67,6 +67,9 @@ final class Runtime {
 
   func isSurfaceVisible(_ surface: Surface) -> Bool { visibleWidgets(of: surface).contains { $0.kind != .spacer } }
 
+  /// Stop child processes before exit.
+  func shutdown() { _nowPlaying?.stop() }
+
   /// Refresh everything (Apple menu click).
   func refreshAll() {
     scheduler.fireAll()

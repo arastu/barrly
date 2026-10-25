@@ -8,7 +8,7 @@ rm -rf "$NEW"; mkdir -p "$NEW/Contents/MacOS" "$NEW/Contents/Resources"
 cp "$EXE" "$NEW/Contents/MacOS/$NAME"
 if [ -n "$RES" ] && [ -d "$RES" ]; then cp -R "$RES"/. "$NEW/Contents/Resources/"; fi
 # SwiftPM resource bundles (Name_Target.bundle) live next to the executable; bring them along.
-for b in "$(dirname "$EXE")"/*.bundle; do [ -d "$b" ] && cp -R "$b" "$NEW/Contents/Resources/"; done
+for b in "$(dirname "$EXE")"/*.bundle; do case "$b" in *Tests.bundle) ;; *) [ -d "$b" ] && cp -R "$b" "$NEW/Contents/Resources/" ;; esac; done
 PLIST="$(dirname "$0")/../Resources/${NAME}.plist"
 if [ -f "$PLIST" ]; then
   sed -e "s/__NAME__/$NAME/g" -e "s/__BID__/$BID/g" "$PLIST" > "$NEW/Contents/Info.plist"

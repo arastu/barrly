@@ -98,6 +98,12 @@ final class NowPlayingProvider {
     if s != state { state = s }
   }
 
+  func stop() {
+    stopped = true
+    process?.terminate()
+    process = nil
+  }
+
   // MARK: - Fallback: Apple Events to Music / Spotify, only while one of them runs.
 
   private func startFallback() {
