@@ -14,7 +14,17 @@ Command Line Tools only; no Xcode needed.
 Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
 Wi‑Fi (IP) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Spacer
 
-## Build and install
+## Install
+
+```sh
+brew install arastu/tap/barrly   # builds from source on your Mac (ad-hoc signed, no Gatekeeper prompt)
+barrly                           # launch;  barrly zen | refresh | settings | quit
+```
+
+The app lives at `/opt/homebrew/opt/barrly/Barrly.app`. Start it at login with
+`brew services start barrly`, or from AeroSpace (see below).
+
+From a checkout:
 
 ```sh
 scripts/install.sh            # release build → ~/.local/share/barrly/Barrly.app, launches it
@@ -34,8 +44,8 @@ open barrly://refresh         # refresh every widget
 open barrly://settings        # open the Settings window (also: right‑click the Apple logo)
 ```
 
-Launch at login: Settings › Advanced, or from AeroSpace:
-`after-startup-command = ['exec-and-forget open -a ~/.local/share/barrly/Barrly.app']`.
+Launch at login: `brew services start barrly`, Settings › Advanced, or from AeroSpace:
+`after-startup-command = ['exec-and-forget open -a /opt/homebrew/opt/barrly/Barrly.app']`.
 
 ## How it is built
 
