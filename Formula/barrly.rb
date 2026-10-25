@@ -3,7 +3,7 @@ class Barrly < Formula
   homepage "https://github.com/arastu/barrly"
   url "https://github.com/arastu/barrly.git",
       tag:      "v0.1.0",
-      revision: "__REVISION__"
+      revision: "1afeee4615a98359d325ee5dc664254e7cbfb69d"
   license "MIT"
   head "https://github.com/arastu/barrly.git", branch: "main"
 
