@@ -1,6 +1,6 @@
 [
   { "app-bundle-id" : "com.openai.codex", "app-name" : "ChatGPT", "window-id" : 7782, "workspace" : "4" },
-  { "app-bundle-id" : "com.anthropic.claudefordesktop", "app-name" : "Claude", "window-id" : 9839, "workspace" : "3" },
+  { "app-bundle-id" : "com.apple.Safari", "app-name" : "Safari", "window-id" : 9839, "workspace" : "3" },
   { "app-bundle-id" : "com.mitchellh.ghostty", "app-name" : "Ghostty", "window-id" : 9797, "workspace" : "2" },
   { "app-bundle-id" : "com.mitchellh.ghostty", "app-name" : "Ghostty", "window-id" : 9798, "workspace" : "2" }
 ]
