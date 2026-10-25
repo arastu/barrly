@@ -17,12 +17,12 @@ struct MeetingWidget: View {
           .foregroundStyle(color)
       }
       .onHover { hovering = $0 }
-      .popover(isPresented: $hovering, arrowEdge: .bottom) {
+      .hoverPopup(isPresented: hovering, theme: theme) {
         VStack(alignment: .leading, spacing: 4) {
-          Text(m.title).font(.headline)
-          Text("\(m.start.formatted(date: .omitted, time: .shortened)) – \(m.end.formatted(date: .omitted, time: .shortened))").foregroundStyle(.secondary)
-          if let url = m.url { Text(url.host ?? url.absoluteString).font(.caption).foregroundStyle(.tertiary) }
-        }.padding(12)
+          Text(m.title).font(.headline).foregroundStyle(theme.palette.text)
+          Text("\(m.start.formatted(date: .omitted, time: .shortened)) – \(m.end.formatted(date: .omitted, time: .shortened))").foregroundStyle(theme.palette.text2)
+          if let url = m.url { Text(url.host ?? url.absoluteString).font(.caption).foregroundStyle(theme.palette.text3) }
+        }
       }
       .onChange(of: spec.options.soonMinutes, initial: true) { _, v in cal.soonMinutes = v }
     }

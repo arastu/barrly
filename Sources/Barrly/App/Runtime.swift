@@ -49,6 +49,7 @@ final class Runtime {
     case .meeting: return calendar.meeting != nil
     case .battery: return battery.state.present
     case .workspaces: return !aerospace.workspaces.isEmpty
+    case .frontApp: return frontApp.app != nil
     default: return true
     }
   }
@@ -98,13 +99,10 @@ final class Runtime {
     case "mode/zen/on": modes.zen = true
     case "mode/zen/off": modes.zen = false
     case "refresh": refreshAll()
-    case "settings": Runtime.showSettings()
+    case "settings": showSettings()
     default: log.warning("unknown url: \(url)")
     }
   }
 
-  static func showSettings() {
-    NSApp.activate()
-    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-  }
+  func showSettings() { SettingsWindowController.shared.show(runtime: self) }
 }

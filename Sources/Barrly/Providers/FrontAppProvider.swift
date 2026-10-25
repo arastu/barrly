@@ -14,6 +14,7 @@ final class FrontAppProvider {
 
   init() {
     update(NSWorkspace.shared.frontmostApplication)
+    if app == nil { update(NSWorkspace.shared.runningApplications.first { $0.isActive && $0.activationPolicy == .regular }) }
     token = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
     ) { note in

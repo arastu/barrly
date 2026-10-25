@@ -5,7 +5,7 @@ struct AppleMenuWidget: View {
   @Environment(Runtime.self) private var runtime
   @Environment(\.theme) private var theme
   var body: some View {
-    WidgetCell(spec: spec, onClick: { runtime.refreshAll() }, onRightClick: { Runtime.showSettings() }) {
+    WidgetCell(spec: spec, onClick: { runtime.refreshAll() }, onRightClick: { runtime.showSettings() }) {
       Image(systemName: "apple.logo").font(theme.fonts.iconLarge).padding(.horizontal, 2)
     }
   }

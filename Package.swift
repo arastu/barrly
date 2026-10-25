@@ -21,7 +21,11 @@ let package = Package(
       dependencies: ["Barrly"],
       path: "Tests/BarrlyTests",
       resources: [.copy("Fixtures")],
-      swiftSettings: [.swiftLanguageMode(.v6)]
+      swiftSettings: [
+        .swiftLanguageMode(.v6),
+        // Command Line Tools ship the swift-testing macro plugin but do not put it on the search path.
+        .unsafeFlags(["-plugin-path", "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing"]),
+      ]
     ),
   ]
 )

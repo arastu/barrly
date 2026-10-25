@@ -1,0 +1,56 @@
+# Barrly
+
+A native macOS bar, inspired by SketchyBar and Übersicht, built on Liquid Glass.
+
+Every widget is built in. There is no config file and no scripting: you choose widgets,
+order them, group them into glass capsules and tune their data in **Barrly Settings**.
+One process, native data sources, no shell forks on hover, workspace switch or app switch.
+
+Requires macOS 26 or later (Liquid Glass). Developed on macOS 27 with Swift 6.4 and the
+Command Line Tools only; no Xcode needed.
+
+## Widgets
+
+Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
+Wi‑Fi (IP) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Spacer
+
+## Build and install
+
+```sh
+scripts/install.sh            # release build → ~/.local/share/barrly/Barrly.app, launches it
+scripts/dev.sh                # debug build + relaunch while developing
+swift test                    # unit tests
+```
+
+The menu bar should be set to auto-hide (System Settings › Desktop & Dock) and your window
+manager should reserve the strip, e.g. AeroSpace `gaps.outer.top`.
+
+## Control from anywhere
+
+```
+open barrly://mode/zen        # toggle zen (hide the noisy widgets)
+open barrly://mode/zen/on     # or /off
+open barrly://refresh         # refresh every widget
+open barrly://settings        # open the Settings window (also: right‑click the Apple logo)
+```
+
+Launch at login: Settings › Advanced, or from AeroSpace:
+`after-startup-command = ['exec-and-forget open -a ~/.local/share/barrly/Barrly.app']`.
+
+## How it is built
+
+- `Shell/` AppKit: one borderless, non-activating `NSPanel` per display, an `NSGlassEffectContainerView`
+  holding one `NSGlassEffectView` capsule per surface. Clicks never steal focus from the front app.
+- `UI/`, `Widgets/` SwiftUI content inside the capsules; hover lozenges are plain fills (never glass on glass).
+  `@ViewState` stands in for `@State`, whose macro plugin ships only with Xcode.
+- `Providers/` native data: IOKit power sources, Mach host statistics, SCDynamicStore, Text Input Sources,
+  NSWorkspace, EventKit, the AeroSpace Unix socket (`subscribe` stream), and the bundled
+  [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter) for now‑playing.
+- `Model/` settings (Codable, UserDefaults), modes, appearance. `SettingsUI/` the Settings window.
+- `Providers/Scheduler.swift` one timer for every polling job, minute-aligned, paused during sleep.
+
+Light/dark, Reduce Transparency, Increase Contrast and Reduce Motion are followed live.
+
+## Phase 0 spikes
+
+See `Spikes/RESULTS.md` for what was verified on macOS 27 before building.
