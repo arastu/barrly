@@ -2,8 +2,8 @@ class Barrly < Formula
   desc "Native Liquid Glass bar for macOS with built-in widgets (SketchyBar + Übersicht inspired)"
   homepage "https://github.com/arastu/barrly"
   url "https://github.com/arastu/barrly.git",
-      tag:      "v0.1.0",
-      revision: "1afeee4615a98359d325ee5dc664254e7cbfb69d"
+      tag:      "v0.1.1",
+      revision: "5b597048f2e0903db4d34d89592d47904e855063"
   license "MIT"
   head "https://github.com/arastu/barrly.git", branch: "main"
 
@@ -14,7 +14,7 @@ class Barrly < Formula
   # formula build is reproducible and sandbox-friendly.
   resource "mediaremote-adapter" do
     url "https://github.com/ungive/mediaremote-adapter.git",
-        revision: "0e82bf1c44ec39554fbfc402ec88a48c6ae2a0fd"
+        revision: "5b597048f2e0903db4d34d89592d47904e855063"
   end
 
   def install
