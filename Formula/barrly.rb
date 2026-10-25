@@ -14,7 +14,7 @@ class Barrly < Formula
   # formula build is reproducible and sandbox-friendly.
   resource "mediaremote-adapter" do
     url "https://github.com/ungive/mediaremote-adapter.git",
-        revision: "5b597048f2e0903db4d34d89592d47904e855063"
+        revision: "0e82bf1c44ec39554fbfc402ec88a48c6ae2a0fd"
   end
 
   def install
