@@ -8,7 +8,6 @@ class Barrly < Formula
   head "https://github.com/arastu/barrly.git", branch: "main"
 
   depends_on :macos => :tahoe
-  depends_on xcode: false
   uses_from_macos "perl"
 
   # The now-playing helper is vendored by the build script (git clone); pin it here so the
