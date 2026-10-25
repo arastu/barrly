@@ -8,6 +8,11 @@ struct NowPlayingState: Hashable, Sendable {
   var title: String = ""
   var artist: String = ""
   var bundleId: String = ""
+
+  /// Web content (Safari / WebKit, Chrome, Firefox, Arc…) reports itself as now playing too.
+  static let browserIds = ["com.apple.Safari", "com.apple.WebKit", "com.google.Chrome", "org.mozilla.firefox",
+                           "company.thebrowser.Browser", "com.brave.Browser", "com.microsoft.edgemac", "org.chromium.Chromium"]
+  var isBrowser: Bool { Self.browserIds.contains { bundleId.hasPrefix($0) } }
 }
 
 /// Now playing, app-agnostic, via the bundled mediaremote-adapter running under /usr/bin/perl
@@ -89,7 +94,7 @@ final class NowPlayingProvider {
   private func publish() {
     let s = NowPlayingState(isPlaying: payload["playing"] as? Bool ?? false,
                             title: payload["title"] as? String ?? "", artist: payload["artist"] as? String ?? "",
-                            bundleId: payload["bundleIdentifier"] as? String ?? "")
+                            bundleId: payload["parentApplicationBundleIdentifier"] as? String ?? payload["bundleIdentifier"] as? String ?? "")
     if s != state { state = s }
   }
 

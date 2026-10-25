@@ -140,6 +140,7 @@ struct WidgetOptionsPane: View {
         Section("Now playing") {
           TextField("Format", text: o(\.nowPlayingFormat)).help("{title} and {artist}")
           Stepper("Max characters: \(spec.options.maxChars)", value: o(\.maxChars), in: 10...120)
+          Toggle("Include browser tabs (Safari, Chrome…)", isOn: o(\.includeBrowsers))
           Text(runtime.nowPlaying.usingAdapter ? "Source: system now-playing service" : "Source: Music / Spotify polling").font(.caption).foregroundStyle(.secondary)
         }
       case .cpu, .ram:

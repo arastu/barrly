@@ -18,6 +18,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   // now playing
   var nowPlayingFormat: String = "{title} – {artist}"
   var maxChars: Int = 48
+  var includeBrowsers: Bool = false
   // cpu / ram
   var interval: Double = 5
   // wifi
@@ -57,6 +58,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     showName = try c.decodeIfPresent(Bool.self, forKey: .showName) ?? d.showName
     nowPlayingFormat = try c.decodeIfPresent(String.self, forKey: .nowPlayingFormat) ?? d.nowPlayingFormat
     maxChars = try c.decodeIfPresent(Int.self, forKey: .maxChars) ?? d.maxChars
+    includeBrowsers = try c.decodeIfPresent(Bool.self, forKey: .includeBrowsers) ?? d.includeBrowsers
     interval = try c.decodeIfPresent(Double.self, forKey: .interval) ?? d.interval
     wifiShow = try c.decodeIfPresent(WifiShow.self, forKey: .wifiShow) ?? d.wifiShow
     warnBelow = try c.decodeIfPresent(Int.self, forKey: .warnBelow) ?? d.warnBelow

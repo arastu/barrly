@@ -45,7 +45,7 @@ final class Runtime {
     guard spec.enabled else { return false }
     if modes.zen && spec.hiddenInZen { return false }
     switch spec.kind {
-    case .nowPlaying: return nowPlaying.state.isPlaying
+    case .nowPlaying: return nowPlaying.state.isPlaying && (spec.options.includeBrowsers || !nowPlaying.state.isBrowser)
     case .meeting: return calendar.meeting != nil
     case .battery: return battery.state.present
     case .workspaces: return !aerospace.workspaces.isEmpty

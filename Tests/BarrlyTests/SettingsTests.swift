@@ -19,10 +19,20 @@ import Testing
 
   @Test func defaultLayoutMatchesSketchybar() {
     let l = Settings.default.layout
-    #expect(l.left.map(\.name) == ["Navigation", "Now playing"])
-    #expect(l.right.map(\.name) == ["Status", "Meeting"])
-    #expect(l.right[1].tint == .lavender)
+    #expect(l.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
+    #expect(l.right.map(\.name) == ["Status"])
+    #expect(l.left[2].tint == .lavender)
     #expect(l.allWidgets.filter { $0.hiddenInZen }.map(\.kind) == [.nowPlaying, .cpu, .ram, .wifi, .jalaliDate, .inputSource])
+  }
+
+  @Test func migrationMovesMeetingAfterNowPlaying() {
+    var s = Settings.default
+    s.version = 1
+    let meeting = s.layout.left.remove(at: 2); s.layout.right.append(meeting)
+    s.migrate()
+    #expect(s.version == 2)
+    #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
+    #expect(s.layout.right.map(\.name) == ["Status"])
   }
 
   @Test func themeResolution() {

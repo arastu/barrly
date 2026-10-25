@@ -53,10 +53,23 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 1
+  var version: Int = 2
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
+
+  /// Brings older saved settings up to the current layout conventions.
+  mutating func migrate() {
+    if version < 2 {
+      // v2: the meeting capsule lives on the left, right after Now playing.
+      if let i = layout.right.firstIndex(where: { $0.widgets.contains { $0.kind == .meeting } }) {
+        let m = layout.right.remove(at: i)
+        let after = layout.left.firstIndex(where: { $0.widgets.contains { $0.kind == .nowPlaying } }).map { $0 + 1 } ?? layout.left.count
+        layout.left.insert(m, at: after)
+      }
+      version = 2
+    }
+  }
 
   /// Reproduces the user's sketchybar bar exactly.
   static var `default`: Settings {
@@ -71,6 +84,9 @@ struct Settings: Codable, Hashable, Sendable {
         Surface(name: "Now playing", widgets: [
           WidgetSpec(.nowPlaying, hiddenInZen: true),
         ]),
+        Surface(name: "Meeting", tint: .lavender, widgets: [
+          WidgetSpec(.meeting),
+        ]),
       ],
       center: [],
       right: [
@@ -84,9 +100,6 @@ struct Settings: Codable, Hashable, Sendable {
           WidgetSpec(.clock) { $0.clickApp = "Calendar" },
           WidgetSpec(.spacer, hoverable: false),
           WidgetSpec(.inputSource, hiddenInZen: true, hoverable: false),
-        ]),
-        Surface(name: "Meeting", tint: .lavender, widgets: [
-          WidgetSpec(.meeting),
         ]),
       ]
     ))

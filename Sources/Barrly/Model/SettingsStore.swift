@@ -17,7 +17,7 @@ final class SettingsStore {
   init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
     if let data = defaults.data(forKey: Self.key) {
-      do { settings = try JSONDecoder().decode(Settings.self, from: data) }
+      do { var s = try JSONDecoder().decode(Settings.self, from: data); s.migrate(); settings = s }
       catch { settings = .default; loadError = "\(error)" }
     } else {
       settings = .default
