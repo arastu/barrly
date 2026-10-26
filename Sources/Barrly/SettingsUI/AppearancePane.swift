@@ -15,7 +15,11 @@ struct AppearancePane: View {
         Picker("Displays", selection: $store.settings.appearance.displays) { Text("All displays").tag(DisplaySelection.all); Text("Main display only").tag(DisplaySelection.main) }
       }
       Section("Glass") {
-        Picker("Glass", selection: $store.settings.appearance.glassStyle) { Text("Clear (see-through)").tag(GlassStyle.clear); Text("Regular (frosted)").tag(GlassStyle.regular) }
+        Picker("Capsules", selection: $store.settings.appearance.glassStyle) { Text("Transparent (see-through)").tag(GlassStyle.transparent); Text("Liquid Glass, clear").tag(GlassStyle.clear); Text("Liquid Glass, regular").tag(GlassStyle.regular) }
+        if store.settings.appearance.glassStyle == .transparent {
+          Slider(value: $store.settings.appearance.capsuleOpacity, in: 0...0.8, step: 0.02) { Text("Capsule tint: \(Int((store.settings.appearance.capsuleOpacity * 100).rounded()))%") }
+          Text("Transparent capsules do not blur what is behind them; the tint only helps legibility.").font(.caption).foregroundStyle(.secondary)
+        }
         Slider(value: $store.settings.appearance.pillHeight, in: 20...48, step: 1) { Text("Capsule height: \(Int(store.settings.appearance.pillHeight)) pt") }
         Slider(value: $store.settings.appearance.pillRadius, in: 0...24, step: 1) { Text("Capsule radius: \(Int(store.settings.appearance.pillRadius)) pt") }
         Slider(value: $store.settings.appearance.chipHeight, in: 14...40, step: 1) { Text("Chip height: \(Int(store.settings.appearance.chipHeight)) pt") }

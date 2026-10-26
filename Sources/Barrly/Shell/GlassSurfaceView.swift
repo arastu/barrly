@@ -11,12 +11,14 @@ final class SizingHostingView<Content: View>: NSHostingView<Content> {
   }
 }
 
-/// One Liquid Glass capsule hosting a SwiftUI SurfaceView. Width follows the SwiftUI content:
-/// NSGlassEffectView manages its contentView itself, so we size the glass view explicitly
-/// instead of relying on constraints crossing into it.
+/// One capsule hosting a SwiftUI SurfaceView. With a system glass style the content sits inside an
+/// NSGlassEffectView; with the transparent style the glass is bypassed and SurfaceView draws its own
+/// see-through capsule. Width follows the SwiftUI content: NSGlassEffectView manages its own
+/// contentView, so the capsule is sized explicitly instead of through constraints crossing into it.
 @MainActor
-final class GlassSurfaceView: NSGlassEffectView {
+final class GlassSurfaceView: NSView {
   let surfaceID: UUID
+  private let glass = NSGlassEffectView()
   private let host: SizingHostingView<SurfaceView>
   private var widthConstraint: NSLayoutConstraint
   private var heightConstraint: NSLayoutConstraint
@@ -27,10 +29,12 @@ final class GlassSurfaceView: NSGlassEffectView {
     widthConstraint = NSLayoutConstraint(); heightConstraint = NSLayoutConstraint()
     super.init(frame: .zero)
     translatesAutoresizingMaskIntoConstraints = false
+    glass.style = .regular
+    glass.autoresizingMask = [.width, .height]
+    addSubview(glass)
     host.sizingOptions = [.intrinsicContentSize]
     host.autoresizingMask = [.width, .height]
-    style = .regular
-    contentView = host
+    glass.contentView = host
     let size = host.intrinsicContentSize
     widthConstraint = widthAnchor.constraint(equalToConstant: max(1, size.width))
     heightConstraint = heightAnchor.constraint(equalToConstant: max(1, size.height))
@@ -40,6 +44,12 @@ final class GlassSurfaceView: NSGlassEffectView {
 
   required init?(coder: NSCoder) { fatalError() }
 
+  override func layout() {
+    super.layout()
+    glass.frame = bounds
+    if host.superview === self { host.frame = bounds }
+  }
+
   private func sync(_ s: NSSize) {
     let w = max(1, ceil(s.width)), h = max(1, ceil(s.height))
     if widthConstraint.constant != w { widthConstraint.constant = w }
@@ -47,9 +57,17 @@ final class GlassSurfaceView: NSGlassEffectView {
   }
 
   func apply(theme: ResolvedTheme, tint: AccentToken?) {
-    cornerRadius = theme.metrics.pillRadius
-    style = theme.glassStyle == .clear ? .clear : .regular
-    if let tint { tintColor = NSColor(theme.palette.accent(tint)).withAlphaComponent(theme.isDark ? 0.22 : 0.18) } else { tintColor = nil }
+    if theme.glassStyle == .transparent {
+      // No system glass: the content hosts its own see-through capsule.
+      if host.superview !== self { glass.contentView = nil; addSubview(host); host.frame = bounds }
+      glass.isHidden = true
+    } else {
+      if glass.contentView !== host { host.removeFromSuperview(); glass.contentView = host }
+      glass.isHidden = false
+      glass.style = theme.glassStyle == .clear ? .clear : .regular
+      glass.cornerRadius = theme.metrics.pillRadius
+      if let tint { glass.tintColor = NSColor(theme.palette.accent(tint)).withAlphaComponent(theme.isDark ? 0.22 : 0.18) } else { glass.tintColor = nil }
+    }
     sync(host.intrinsicContentSize)
   }
 }
