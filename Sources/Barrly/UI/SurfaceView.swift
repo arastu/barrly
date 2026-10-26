@@ -8,7 +8,7 @@ struct SurfaceView: View {
   var body: some View {
     let theme = runtime.theme
     let surface = runtime.settings.settings.layout.allSurfaces.first { $0.id == surfaceID }
-    HStack(spacing: 0) {
+    HStack(spacing: theme.widgetGlass ? 3 : 0) {
       if let surface {
         ForEach(runtime.visibleWidgets(of: surface)) { spec in
           WidgetView(spec: spec)
