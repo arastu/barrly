@@ -83,6 +83,7 @@ struct ResolvedTheme: Sendable, Hashable {
   var colorfulIcons: Bool
   var glassStyle: GlassStyle
   var widgetGlass: Bool
+  var glassClearness: Double
   var isDark: Bool
   var reduceTransparency: Bool
   var increaseContrast: Bool
@@ -120,7 +121,7 @@ struct ResolvedTheme: Sendable, Hashable {
                     chipHeight: a.chipHeight, chipRadius: a.chipRadius, gap: a.gap)
     return ResolvedTheme(palette: p, metrics: m, fonts: Fonts(labelSize: a.labelFontSize, iconSize: a.iconFontSize),
                          accent: p.accent(a.accent), colorfulIcons: a.colorfulIcons, glassStyle: a.glassStyle,
-                         widgetGlass: a.widgetGlass, isDark: isDark, reduceTransparency: reduceTransparency,
+                         widgetGlass: a.widgetGlass, glassClearness: a.glassClearness, isDark: isDark, reduceTransparency: reduceTransparency,
                          increaseContrast: increaseContrast, reduceMotion: reduceMotion)
   }
 

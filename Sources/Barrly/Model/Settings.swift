@@ -55,6 +55,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
   var colorfulIcons: Bool = true
   var glassStyle: GlassStyle = .clear
   var widgetGlass: Bool = true      // every widget sits on its own glass lozenge
+  var glassClearness: Double = 0    // 0 = system glass, 1 = nearly invisible
 
   // Tolerant decoding so older saved settings pick up new fields with their defaults.
   init() {}
@@ -78,6 +79,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
     colorfulIcons = try c.decodeIfPresent(Bool.self, forKey: .colorfulIcons) ?? d.colorfulIcons
     glassStyle = try c.decodeIfPresent(GlassStyle.self, forKey: .glassStyle) ?? d.glassStyle
     widgetGlass = try c.decodeIfPresent(Bool.self, forKey: .widgetGlass) ?? d.widgetGlass
+    glassClearness = try c.decodeIfPresent(Double.self, forKey: .glassClearness) ?? d.glassClearness
   }
 }
 
