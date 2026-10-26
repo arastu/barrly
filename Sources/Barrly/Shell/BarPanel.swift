@@ -5,6 +5,10 @@ final class BarPanel: NSPanel {
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
 
+  /// AppKit pushes windows below the menu bar strip unless their level is above the menu bar.
+  /// The bar lives in that strip on purpose (the menu bar is auto-hidden), at any level.
+  override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
+
   init(frame: CGRect) {
     super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
     isFloatingPanel = true
