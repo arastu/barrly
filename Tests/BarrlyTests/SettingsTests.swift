@@ -30,7 +30,7 @@ import Testing
     s.version = 1
     let meeting = s.layout.left.remove(at: 2); s.layout.right.append(meeting)
     s.migrate()
-    #expect(s.version == 4)
+    #expect(s.version == 5)
     #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
     #expect(s.layout.right.map(\.name) == ["Status"])
   }
@@ -40,7 +40,7 @@ import Testing
     s.version = 2
     s.layout.right[0].widgets.removeAll { $0.kind == .volume }
     s.migrate()
-    #expect(s.version == 4)
+    #expect(s.version == 5)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .volume) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
     #expect(kinds.filter { $0 == .volume }.count == 1)
@@ -53,10 +53,20 @@ import Testing
     s.version = 3
     s.layout.right[0].widgets.removeAll { $0.kind == .vpn }
     s.migrate()
-    #expect(s.version == 4)
+    #expect(s.version == 5)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .vpn) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
     #expect(kinds.filter { $0 == .vpn }.count == 1)
+  }
+
+  @Test func migrationAppendsInputLock() {
+    var s = Settings.default
+    s.version = 4
+    s.layout.right[0].widgets.removeAll { $0.kind == .inputLock }
+    s.migrate()
+    #expect(s.version == 5)
+    #expect(s.layout.right[0].widgets.last?.kind == .inputLock)
+    #expect(s.layout.allWidgets.filter { $0.kind == .inputLock }.count == 1)
   }
 
   @Test func themeResolution() {

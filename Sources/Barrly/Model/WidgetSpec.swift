@@ -28,6 +28,8 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   var showPercent: Bool = true
   // volume
   var volumeStep: Int = 6
+  // input lock
+  var unlockChord: KeyChord = KeyChord()
   // input source
   var inputSourceMap: [String: String] = [
     "com.apple.keylayout.ABC": "EN",
@@ -68,6 +70,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     warnBelow = try c.decodeIfPresent(Int.self, forKey: .warnBelow) ?? d.warnBelow
     showPercent = try c.decodeIfPresent(Bool.self, forKey: .showPercent) ?? d.showPercent
     volumeStep = try c.decodeIfPresent(Int.self, forKey: .volumeStep) ?? d.volumeStep
+    unlockChord = try c.decodeIfPresent(KeyChord.self, forKey: .unlockChord) ?? d.unlockChord
     inputSourceMap = try c.decodeIfPresent([String: String].self, forKey: .inputSourceMap) ?? d.inputSourceMap
     clipChars = try c.decodeIfPresent(Int.self, forKey: .clipChars) ?? d.clipChars
     soonMinutes = try c.decodeIfPresent(Int.self, forKey: .soonMinutes) ?? d.soonMinutes

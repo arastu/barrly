@@ -12,7 +12,7 @@ Command Line Tools only; no Xcode needed.
 ## Widgets
 
 Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
-Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Spacer
+Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Input lock (blocks all keyboards and mice until ⌃⌥⌘L) · Spacer
 
 ## Install
 
@@ -42,6 +42,7 @@ open barrly://mode/zen        # toggle zen (hide the noisy widgets)
 open barrly://mode/zen/on     # or /off
 open barrly://refresh         # refresh every widget
 open barrly://settings        # open the Settings window (also: right‑click the Apple logo)
+open barrly://lock            # block all keyboards and mice until the unlock chord (also: lock/on, lock/off)
 ```
 
 Launch at login: `brew services start barrly`, Settings › Advanced, or from AeroSpace:

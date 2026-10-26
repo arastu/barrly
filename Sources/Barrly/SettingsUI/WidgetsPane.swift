@@ -161,6 +161,18 @@ struct WidgetOptionsPane: View {
         }
       case .battery:
         Section("Battery") { Stepper("Warn below \(spec.options.warnBelow)%", value: o(\.warnBelow), in: 5...50, step: 5); Toggle("Show percentage", isOn: o(\.showPercent)) }
+      case .inputLock:
+        Section("Input lock") {
+          LabeledContent("Unlock shortcut") { ShortcutRecorder(chord: o(\.unlockChord)) }
+          Toggle("Show unlock hint while locked", isOn: o(\.showName))
+          Text("Click blocks every keyboard, mouse and trackpad, built-in or external, until you press \(spec.options.unlockChord.display). The screen stays on. Also: barrly://lock, lock/on, lock/off.").font(.caption).foregroundStyle(.secondary)
+          if runtime.inputLock.authorized { Text("Accessibility permission: granted").font(.caption).foregroundStyle(.secondary) }
+          else {
+            Text("Accessibility permission is required. After a Barrly upgrade macOS may ask again.").font(.caption).foregroundStyle(.red)
+            Button("Open Accessibility settings") { runtime.inputLock.requestAuthorization(); runtime.inputLock.openAccessibilitySettings() }
+          }
+          if let e = runtime.inputLock.lastError { Text(e).font(.caption).foregroundStyle(.red) }
+        }
       case .vpn:
         Section("VPN") {
           Toggle("Show name", isOn: o(\.showName))

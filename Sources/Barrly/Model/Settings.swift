@@ -76,7 +76,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 4
+  var version: Int = 5
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
@@ -109,6 +109,13 @@ struct Settings: Codable, Hashable, Sendable {
         layout.right[s].widgets.insert(WidgetSpec(.vpn), at: w + 1)
       }
       version = 4
+    }
+    if version < 5 {
+      // v5: the input lock sits at the end of the status capsule.
+      if !layout.allWidgets.contains(where: { $0.kind == .inputLock }), !layout.right.isEmpty {
+        layout.right[layout.right.count - 1].widgets.append(WidgetSpec(.inputLock))
+      }
+      version = 5
     }
   }
 
@@ -143,6 +150,7 @@ struct Settings: Codable, Hashable, Sendable {
           WidgetSpec(.clock) { $0.clickApp = "Calendar" },
           WidgetSpec(.spacer, hoverable: false),
           WidgetSpec(.inputSource, hiddenInZen: true, hoverable: false),
+          WidgetSpec(.inputLock),
         ]),
       ]
     ))

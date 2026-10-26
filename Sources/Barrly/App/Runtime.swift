@@ -19,6 +19,7 @@ final class Runtime {
   let inputSource = InputSourceProvider()
   let network = NetworkProvider()
   let aerospace = AerospaceProvider()
+  let inputLock = InputLockProvider()
   @ObservationIgnored private var _nowPlaying: NowPlayingProvider? = nil
   @ObservationIgnored private var _calendar: CalendarProvider? = nil
   @ObservationIgnored private var _volume: VolumeProvider? = nil
@@ -74,7 +75,7 @@ final class Runtime {
   func isSurfaceVisible(_ surface: Surface) -> Bool { visibleWidgets(of: surface).contains { $0.kind != .spacer } }
 
   /// Stop child processes before exit.
-  func shutdown() { _nowPlaying?.stop() }
+  func shutdown() { _nowPlaying?.stop(); inputLock.unlock() }
 
   /// Refresh everything (Apple menu click).
   func refreshAll() {
@@ -108,6 +109,9 @@ final class Runtime {
     case "mode/zen/on": modes.zen = true
     case "mode/zen/off": modes.zen = false
     case "refresh": refreshAll()
+    case "lock": inputLock.toggle()
+    case "lock/on": inputLock.lock()
+    case "lock/off": inputLock.unlock()
     case "settings": showSettings()
     default: log.warning("unknown url: \(url)")
     }

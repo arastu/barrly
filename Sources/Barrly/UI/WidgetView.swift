@@ -19,6 +19,7 @@ struct WidgetView: View {
     case .meeting: MeetingWidget(spec: spec)
     case .volume: VolumeWidget(spec: spec)
     case .vpn: VPNWidget(spec: spec)
+    case .inputLock: InputLockWidget(spec: spec)
     case .spacer: Color.clear.frame(width: spec.options.width, height: 1)
     }
   }
