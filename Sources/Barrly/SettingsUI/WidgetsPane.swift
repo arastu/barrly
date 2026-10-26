@@ -114,6 +114,12 @@ struct WidgetOptionsPane: View {
           Toggle("Hide in zen mode", isOn: b(\.hiddenInZen))
           Toggle("Highlight on hover", isOn: b(\.hoverable))
           Toggle("Secondary text", isOn: b(\.secondary))
+          if spec.kind.defaultTint != nil || spec.kind == .appleMenu {
+            Picker("Icon colour", selection: o(\.iconTint)) {
+              Text("Automatic").tag("auto"); Text("Same as text").tag("none")
+              ForEach(AccentToken.allCases) { Text($0.rawValue.capitalized).tag($0.rawValue) }
+            }
+          }
         }
       }
       switch spec.kind {

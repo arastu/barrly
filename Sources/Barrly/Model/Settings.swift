@@ -50,6 +50,29 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
   var respectNotch: Bool = false
   var labelFontSize: Double = 13
   var iconFontSize: Double = 14
+  var colorfulIcons: Bool = true
+
+  // Tolerant decoding so older saved settings pick up new fields with their defaults.
+  init() {}
+  init(from decoder: Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    let d = AppearanceSettings()
+    barHeight = try c.decodeIfPresent(Double.self, forKey: .barHeight) ?? d.barHeight
+    margin = try c.decodeIfPresent(Double.self, forKey: .margin) ?? d.margin
+    yOffset = try c.decodeIfPresent(Double.self, forKey: .yOffset) ?? d.yOffset
+    pillHeight = try c.decodeIfPresent(Double.self, forKey: .pillHeight) ?? d.pillHeight
+    pillRadius = try c.decodeIfPresent(Double.self, forKey: .pillRadius) ?? d.pillRadius
+    chipHeight = try c.decodeIfPresent(Double.self, forKey: .chipHeight) ?? d.chipHeight
+    chipRadius = try c.decodeIfPresent(Double.self, forKey: .chipRadius) ?? d.chipRadius
+    gap = try c.decodeIfPresent(Double.self, forKey: .gap) ?? d.gap
+    accent = try c.decodeIfPresent(AccentToken.self, forKey: .accent) ?? d.accent
+    alwaysOnTop = try c.decodeIfPresent(Bool.self, forKey: .alwaysOnTop) ?? d.alwaysOnTop
+    displays = try c.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? d.displays
+    respectNotch = try c.decodeIfPresent(Bool.self, forKey: .respectNotch) ?? d.respectNotch
+    labelFontSize = try c.decodeIfPresent(Double.self, forKey: .labelFontSize) ?? d.labelFontSize
+    iconFontSize = try c.decodeIfPresent(Double.self, forKey: .iconFontSize) ?? d.iconFontSize
+    colorfulIcons = try c.decodeIfPresent(Bool.self, forKey: .colorfulIcons) ?? d.colorfulIcons
+  }
 }
 
 struct Settings: Codable, Hashable, Sendable {

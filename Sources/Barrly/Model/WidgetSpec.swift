@@ -39,6 +39,8 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   var soonMinutes: Int = 10
   // spacer
   var width: Double = 10
+  // icon colour: "auto" (follow the global toggle + the widget's default), "none", or an AccentToken raw value
+  var iconTint: String = "auto"
 
   enum WifiShow: String, Codable, CaseIterable, Sendable { case lastOctet, fullIP, none }
 
@@ -67,6 +69,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     clipChars = try c.decodeIfPresent(Int.self, forKey: .clipChars) ?? d.clipChars
     soonMinutes = try c.decodeIfPresent(Int.self, forKey: .soonMinutes) ?? d.soonMinutes
     width = try c.decodeIfPresent(Double.self, forKey: .width) ?? d.width
+    iconTint = try c.decodeIfPresent(String.self, forKey: .iconTint) ?? d.iconTint
   }
 }
 

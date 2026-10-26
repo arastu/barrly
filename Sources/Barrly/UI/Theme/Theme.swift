@@ -80,6 +80,7 @@ struct ResolvedTheme: Sendable, Hashable {
   var metrics: Metrics
   var fonts: Fonts
   var accent: Color
+  var colorfulIcons: Bool
   var isDark: Bool
   var reduceTransparency: Bool
   var increaseContrast: Bool
@@ -91,6 +92,16 @@ struct ResolvedTheme: Sendable, Hashable {
     if increaseContrast { return palette.text }
     let c = palette.accent(token)
     return isDark ? c : c.mix(with: .black, by: 0.28)
+  }
+
+  /// Resting icon colour for a widget: per-widget override, else the kind's default when
+  /// "Colourful icons" is on, else nil (inherit the label colour).
+  func iconTint(for spec: WidgetSpec) -> Color? {
+    switch spec.options.iconTint {
+    case "none": return nil
+    case "auto": return colorfulIcons ? spec.kind.defaultTint.map { stateColor($0) } : nil
+    case let raw: return AccentToken(rawValue: raw).map { stateColor($0) }
+    }
   }
 
   var hoverAnimation: Animation? { reduceMotion ? nil : .easeInOut(duration: 0.2) }
@@ -106,7 +117,7 @@ struct ResolvedTheme: Sendable, Hashable {
     let m = Metrics(barHeight: a.barHeight, pillHeight: a.pillHeight, pillRadius: a.pillRadius,
                     chipHeight: a.chipHeight, chipRadius: a.chipRadius, gap: a.gap)
     return ResolvedTheme(palette: p, metrics: m, fonts: Fonts(labelSize: a.labelFontSize, iconSize: a.iconFontSize),
-                         accent: p.accent(a.accent), isDark: isDark, reduceTransparency: reduceTransparency,
+                         accent: p.accent(a.accent), colorfulIcons: a.colorfulIcons, isDark: isDark, reduceTransparency: reduceTransparency,
                          increaseContrast: increaseContrast, reduceMotion: reduceMotion)
   }
 

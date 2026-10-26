@@ -26,6 +26,8 @@ struct AppearancePane: View {
         Slider(value: $store.settings.appearance.labelFontSize, in: 10...18, step: 1) { Text("Label size: \(Int(store.settings.appearance.labelFontSize)) pt") }
         Slider(value: $store.settings.appearance.iconFontSize, in: 10...20, step: 1) { Text("Symbol size: \(Int(store.settings.appearance.iconFontSize)) pt") }
         Picker("Accent", selection: $store.settings.appearance.accent) { ForEach(AccentToken.allCases) { Text($0.rawValue.capitalized).tag($0) } }
+        Toggle("Colourful icons", isOn: $store.settings.appearance.colorfulIcons)
+        Text("Each widget's symbol gets its own colour; override per widget in its options.").font(.caption).foregroundStyle(.secondary)
       }
       Section("System") {
         LabeledContent("Appearance", value: runtime.appearance.isDark ? "Dark" : "Light")

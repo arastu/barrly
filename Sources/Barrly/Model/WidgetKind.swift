@@ -44,6 +44,22 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     }
   }
 
+  /// Default icon colour when "Colourful icons" is on.
+  var defaultTint: AccentToken? {
+    switch self {
+    case .cpu: .blue
+    case .ram: .mauve
+    case .wifi: .sapphire
+    case .battery: .green
+    case .jalaliDate: .peach
+    case .clock: .red
+    case .inputSource: .teal
+    case .meeting: .lavender
+    case .nowPlaying: .pink
+    case .appleMenu, .workspaces, .frontApp, .spacer: nil
+    }
+  }
+
   /// Widgets that make sense to add more than once (spacers); everything else is singleton.
   var allowsDuplicates: Bool { self == .spacer }
 }

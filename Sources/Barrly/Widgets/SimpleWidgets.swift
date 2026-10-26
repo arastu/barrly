@@ -28,11 +28,12 @@ struct FrontAppWidget: View {
 struct ClockWidget: View {
   let spec: WidgetSpec
   @Environment(Runtime.self) private var runtime
+  @Environment(\.theme) private var theme
   var body: some View {
     let f = DateFormatter(); f.dateFormat = spec.options.clockFormat
     if spec.options.clockFormat.contains("s") { runtime.clock.requireSeconds() }
     return WidgetCell(spec: spec, onClick: { runtime.open(app: spec.options.clickApp ?? "Calendar") }) {
-      IconLabel(symbol: "calendar", label: f.string(from: runtime.clock.now))
+      IconLabel(symbol: "calendar", label: f.string(from: runtime.clock.now), iconColor: theme.iconTint(for: spec))
     }
   }
 }
@@ -47,7 +48,7 @@ struct JalaliDateWidget: View {
     let weekday = Calendar.current.component(.weekday, from: now)
     WidgetCell(spec: spec, onClick: { runtime.open(app: spec.options.clickApp ?? "Calendar") }) {
       IconLabel(symbol: "calendar", label: j.formatted(spec.options.jalaliFormat, persianDigits: spec.options.persianDigits, weekday: weekday),
-                labelFont: theme.fonts.persian)
+                iconColor: theme.iconTint(for: spec), labelFont: theme.fonts.persian)
     }
   }
 }
@@ -55,9 +56,10 @@ struct JalaliDateWidget: View {
 struct CpuWidget: View {
   let spec: WidgetSpec
   @Environment(Runtime.self) private var runtime
+  @Environment(\.theme) private var theme
   var body: some View {
     WidgetCell(spec: spec, onClick: { runtime.open(app: spec.options.clickApp ?? "Activity Monitor") }) {
-      IconLabel(symbol: "cpu", label: "\(Int((runtime.cpu.usage * 100).rounded()))%")
+      IconLabel(symbol: "cpu", label: "\(Int((runtime.cpu.usage * 100).rounded()))%", iconColor: theme.iconTint(for: spec))
     }
     .onChange(of: spec.options.interval, initial: true) { _, v in runtime.cpu.setInterval(max(1, v)) }
   }
@@ -66,9 +68,10 @@ struct CpuWidget: View {
 struct RamWidget: View {
   let spec: WidgetSpec
   @Environment(Runtime.self) private var runtime
+  @Environment(\.theme) private var theme
   var body: some View {
     WidgetCell(spec: spec, onClick: { runtime.open(app: spec.options.clickApp ?? "Activity Monitor") }) {
-      IconLabel(symbol: "memorychip", label: "\(Int((runtime.memory.usedFraction * 100).rounded()))%")
+      IconLabel(symbol: "memorychip", label: "\(Int((runtime.memory.usedFraction * 100).rounded()))%", iconColor: theme.iconTint(for: spec))
     }
     .onChange(of: spec.options.interval, initial: true) { _, v in runtime.memory.setInterval(max(1, v)) }
   }
@@ -88,7 +91,7 @@ struct WifiWidget: View {
     }()
     WidgetCell(spec: spec, onClick: { copy(n.ipv4) }) {
       IconLabel(symbol: n.connected ? (n.isWifi ? "wifi" : "network") : "wifi.slash", label: label,
-                iconColor: n.connected ? (flash ? theme.stateColor(.green) : nil) : theme.palette.text3)
+                iconColor: n.connected ? (flash ? theme.stateColor(.green) : theme.iconTint(for: spec)) : theme.palette.text3)
       .foregroundStyle(flash ? theme.stateColor(.green) : (n.connected ? theme.palette.text : theme.palette.text3))
     }
   }
@@ -111,7 +114,7 @@ struct BatteryWidget: View {
       : b.percent >= 38 ? "battery.50percent" : b.percent >= 13 ? "battery.25percent" : "battery.0percent"
     let color: Color? = b.isCharging ? theme.stateColor(.teal) : b.percent <= spec.options.warnBelow ? theme.stateColor(.red) : nil
     WidgetCell(spec: spec) {
-      IconLabel(symbol: symbol, label: spec.options.showPercent ? "\(b.percent)%" : nil, iconColor: color)
+      IconLabel(symbol: symbol, label: spec.options.showPercent ? "\(b.percent)%" : nil, iconColor: color ?? theme.iconTint(for: spec))
     }
     .animation(theme.stateAnimation, value: color)
   }
@@ -126,7 +129,7 @@ struct InputSourceWidget: View {
     let label = spec.options.inputSourceMap[s.id]
       ?? (s.id.localizedCaseInsensitiveContains("persian") || s.id.localizedCaseInsensitiveContains("farsi") ? "FA" : nil)
       ?? String(s.languageCode.prefix(2)).uppercased()
-    WidgetCell(spec: spec) { IconLabel(symbol: "keyboard", label: label, labelFont: theme.fonts.small) }
+    WidgetCell(spec: spec) { IconLabel(symbol: "keyboard", label: label, iconColor: theme.iconTint(for: spec), labelFont: theme.fonts.small) }
   }
 }
 
@@ -140,7 +143,7 @@ struct NowPlayingWidget: View {
     if s.artist.isEmpty { text = s.title }
     if text.count > spec.options.maxChars { text = String(text.prefix(spec.options.maxChars - 1)) + "…" }
     return WidgetCell(spec: spec, onClick: { runtime.nowPlaying.activatePlayer() }) {
-      IconLabel(symbol: "music.note", label: text, labelFont: theme.fonts.labelMedium)
+      IconLabel(symbol: "music.note", label: text, iconColor: theme.iconTint(for: spec), labelFont: theme.fonts.labelMedium)
     }
   }
 }

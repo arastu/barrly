@@ -14,7 +14,7 @@ struct MeetingWidget: View {
       let (title, detail, color) = Self.describe(m, now: now, clip: spec.options.clipChars, theme: theme)
       WidgetCell(spec: spec, onClick: { join(m) }) {
         HStack(spacing: theme.metrics.iconLabelSpacing) {
-          Image(systemName: "video.fill").font(theme.fonts.icon).foregroundStyle(color)
+          Image(systemName: "video.fill").font(theme.fonts.icon).foregroundStyle(theme.iconTint(for: spec) ?? color)
           // Title stays in the label colour for legibility; only the state (time) carries the tint.
           Text(title).font(theme.fonts.persian).foregroundStyle(theme.palette.text).lineLimit(1)
           Text("· " + detail).font(theme.fonts.label).foregroundStyle(color).lineLimit(1)
