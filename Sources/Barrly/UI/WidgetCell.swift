@@ -20,17 +20,10 @@ struct WidgetCell<Content: View>: View {
       .padding(.horizontal, theme.metrics.cellPadding + 4)
       .frame(height: theme.metrics.chipHeight)
       .background {
-        let shape = RoundedRectangle(cornerRadius: theme.metrics.chipRadius, style: .continuous)
-        if theme.widgetGlass && !theme.reduceTransparency {
-          // Every widget rests on its own raised lozenge (glass cannot nest, so this is the hover
-          // highlight at half strength with a specular top edge); hover brings it to full.
-          shape.fill(theme.palette.highlight.opacity(lit ? 1 : 0.45))
-            .overlay(shape.fill(LinearGradient(colors: [.white.opacity(theme.isDark ? 0.10 : 0.35), .clear], startPoint: .top, endPoint: .center)))
-            .overlay(shape.strokeBorder(theme.palette.highlightRim.opacity(lit ? 1 : 0.55), lineWidth: 1))
-        } else {
-          shape.fill(theme.palette.highlight.opacity(lit ? 1 : 0))
-            .overlay(shape.strokeBorder(theme.palette.highlightRim.opacity(lit ? 1 : 0), lineWidth: 1))
-        }
+        RoundedRectangle(cornerRadius: theme.metrics.chipRadius, style: .continuous)
+          .fill(theme.palette.highlight.opacity(lit ? 1 : 0))
+          .overlay(RoundedRectangle(cornerRadius: theme.metrics.chipRadius, style: .continuous)
+            .strokeBorder(theme.palette.highlightRim.opacity(lit ? 1 : 0), lineWidth: 1))
       }
       .animation(theme.hoverAnimation, value: lit)
       .contentShape(Rectangle())

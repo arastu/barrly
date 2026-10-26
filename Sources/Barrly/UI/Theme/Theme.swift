@@ -81,8 +81,6 @@ struct ResolvedTheme: Sendable, Hashable {
   var fonts: Fonts
   var accent: Color
   var colorfulIcons: Bool
-  var glassStyle: GlassStyle
-  var widgetGlass: Bool
   var isDark: Bool
   var reduceTransparency: Bool
   var increaseContrast: Bool
@@ -119,8 +117,7 @@ struct ResolvedTheme: Sendable, Hashable {
     let m = Metrics(barHeight: a.barHeight, pillHeight: a.pillHeight, pillRadius: a.pillRadius,
                     chipHeight: a.chipHeight, chipRadius: a.chipRadius, gap: a.gap)
     return ResolvedTheme(palette: p, metrics: m, fonts: Fonts(labelSize: a.labelFontSize, iconSize: a.iconFontSize),
-                         accent: p.accent(a.accent), colorfulIcons: a.colorfulIcons, glassStyle: a.glassStyle,
-                         widgetGlass: a.widgetGlass, isDark: isDark, reduceTransparency: reduceTransparency,
+                         accent: p.accent(a.accent), colorfulIcons: a.colorfulIcons, isDark: isDark, reduceTransparency: reduceTransparency,
                          increaseContrast: increaseContrast, reduceMotion: reduceMotion)
   }
 
