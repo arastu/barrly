@@ -163,7 +163,9 @@ struct WidgetOptionsPane: View {
         Section("Battery") { Stepper("Warn below \(spec.options.warnBelow)%", value: o(\.warnBelow), in: 5...50, step: 5); Toggle("Show percentage", isOn: o(\.showPercent)) }
       case .inputLock:
         Section("Input lock") {
-          LabeledContent("Unlock shortcut") { ShortcutRecorder(chord: o(\.unlockChord)) }
+          LabeledContent("Lock shortcut") { ShortcutRecorder(chord: o(\.lockChord), onRecording: { runtime.inputLock.hotKeySuspended = $0 }) }
+          LabeledContent("Unlock shortcut") { ShortcutRecorder(chord: o(\.unlockChord), onRecording: { runtime.inputLock.hotKeySuspended = $0 }) }
+          if spec.options.lockChord == spec.options.unlockChord { Text("Same keys: press once to lock, again to unlock.").font(.caption).foregroundStyle(.secondary) }
           Toggle("Show unlock hint while locked", isOn: o(\.showName))
           Text("Click blocks every keyboard, mouse and trackpad, built-in or external, until you press \(spec.options.unlockChord.display). The screen stays on. Also: barrly://lock, lock/on, lock/off.").font(.caption).foregroundStyle(.secondary)
           if runtime.inputLock.authorized { Text("Accessibility permission: granted").font(.caption).foregroundStyle(.secondary) }

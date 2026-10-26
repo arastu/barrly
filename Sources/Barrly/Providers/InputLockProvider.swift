@@ -37,6 +37,12 @@ final class InputLockProvider {
   private(set) var locked = false
   private(set) var lastError: String? = nil
   var chord = KeyChord() { didSet { chordKey = Int64(chord.keyCode); chordFlags = chord.cgFlags.rawValue } }
+  /// Global shortcut that engages the lock (nil = none). While locked the event tap sees the keys
+  /// first, so the same chord as `chord` makes it a toggle.
+  var lockChord: KeyChord? = nil { didSet { if lockChord != oldValue { registerHotKey() } } }
+  /// Set while Settings records a shortcut so the hot key does not swallow the key press.
+  var hotKeySuspended = false { didSet { if hotKeySuspended != oldValue { registerHotKey() } } }
+  @ObservationIgnored private var hotKey: GlobalHotKey? = nil
   @ObservationIgnored nonisolated(unsafe) private var chordKey: Int64 = 37
   @ObservationIgnored nonisolated(unsafe) private var chordFlags: UInt64 = CGEventFlags([.maskControl, .maskAlternate, .maskCommand]).rawValue
   @ObservationIgnored nonisolated(unsafe) private var tap: CFMachPort? = nil
@@ -54,6 +60,15 @@ final class InputLockProvider {
   }
 
   func toggle() { locked ? unlock() : lock() }
+
+  private func registerHotKey() {
+    hotKey?.unregister(); hotKey = nil
+    guard let lockChord, !hotKeySuspended else { return }
+    hotKey = GlobalHotKey(chord: lockChord) { [weak self] in
+      Task { @MainActor in self?.lock() }
+    }
+    if hotKey == nil { lastError = "Could not register the lock shortcut \(lockChord.display); another app may own it." }
+  }
 
   func lock() {
     guard !locked else { return }

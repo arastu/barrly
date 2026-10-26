@@ -16,5 +16,7 @@ struct InputLockWidget: View {
     }
     .animation(theme.stateAnimation, value: lock.locked)
     .onChange(of: spec.options.unlockChord, initial: true) { _, c in lock.chord = c }
+    .onChange(of: spec.options.lockChord, initial: true) { _, c in lock.lockChord = c }
+    .onDisappear { lock.lockChord = nil }
   }
 }
