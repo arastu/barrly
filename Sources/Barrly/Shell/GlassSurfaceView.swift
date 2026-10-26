@@ -13,9 +13,9 @@ final class SizingHostingView<Content: View>: NSHostingView<Content> {
 
 /// One Liquid Glass capsule. The glass lives here, inside the glass container, sized to the
 /// SwiftUI content; the content itself (`host`) is placed by the window controller in an overlay
-/// above the container and kept aligned with this view. That split lets the glass fade towards
-/// the backdrop ("clearness") without fading text and icons — NSGlassEffectView composites its
-/// contentView together with the glass, so alpha on it would dim everything.
+/// above the container and kept aligned with this view, so the content never takes part in the
+/// glass compositing. (NSGlassEffectView ignores alphaValue, so there is no "clearness" knob
+/// beyond style + appearance: dark + clear is the system HUD look.)
 @MainActor
 final class GlassSurfaceView: NSView {
   let surfaceID: UUID
@@ -56,8 +56,6 @@ final class GlassSurfaceView: NSView {
     glass.cornerRadius = theme.metrics.pillRadius
     glass.style = theme.glassStyle == .clear ? .clear : .regular
     if let tint { glass.tintColor = NSColor(theme.palette.accent(tint)).withAlphaComponent(theme.isDark ? 0.22 : 0.18) } else { glass.tintColor = nil }
-    // 0 = full system glass, 1 = almost gone (the backdrop shows through unrefracted).
-    glass.alphaValue = 1 - 0.9 * min(1, max(0, theme.glassClearness))
     sync(host.intrinsicContentSize)
   }
 }

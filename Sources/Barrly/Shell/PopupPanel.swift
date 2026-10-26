@@ -28,6 +28,7 @@ final class PopupPanel {
       p.contentView = glass
       panel = p
     }
+    p.appearance = NSAppearance(named: theme.isDark ? .darkAqua : .aqua)
     let x = anchor.midX - size.width / 2
     let y = anchor.minY - size.height - 6
     p.setFrame(CGRect(x: x, y: y, width: size.width, height: size.height), display: true)

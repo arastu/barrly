@@ -101,6 +101,7 @@ final class BarWindowController {
     let theme = runtime.theme
     relayout(appearance: settings.appearance)
     panel.apply(topmost: settings.appearance.alwaysOnTop)
+    panel.appearance = settings.appearance.barAppearance == .system ? nil : NSAppearance(named: theme.isDark ? .darkAqua : .aqua)
     for side in Side.allCases {
       let surfaces = settings.layout[side]
       let ids = surfaces.map(\.id)
