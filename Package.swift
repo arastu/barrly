@@ -14,6 +14,7 @@ let package = Package(
         .linkedFramework("AppKit"), .linkedFramework("SwiftUI"), .linkedFramework("IOKit"),
         .linkedFramework("CoreWLAN"), .linkedFramework("SystemConfiguration"), .linkedFramework("EventKit"),
         .linkedFramework("Carbon"), .linkedFramework("ServiceManagement"),
+        .linkedFramework("CoreAudio"), .linkedFramework("AudioToolbox"),
       ]
     ),
     .testTarget(

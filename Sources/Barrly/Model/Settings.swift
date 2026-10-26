@@ -76,7 +76,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 2
+  var version: Int = 3
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
@@ -91,6 +91,15 @@ struct Settings: Codable, Hashable, Sendable {
         layout.left.insert(m, at: after)
       }
       version = 2
+    }
+    if version < 3 {
+      // v3: the volume widget joins the status capsule, right after Wi-Fi.
+      if !layout.allWidgets.contains(where: { $0.kind == .volume }),
+         let s = layout.right.firstIndex(where: { $0.widgets.contains { $0.kind == .wifi } }),
+         let w = layout.right[s].widgets.firstIndex(where: { $0.kind == .wifi }) {
+        layout.right[s].widgets.insert(WidgetSpec(.volume, hiddenInZen: true), at: w + 1)
+      }
+      version = 3
     }
   }
 
@@ -117,6 +126,7 @@ struct Settings: Codable, Hashable, Sendable {
           WidgetSpec(.cpu, hiddenInZen: true, secondary: true),
           WidgetSpec(.ram, hiddenInZen: true, secondary: true),
           WidgetSpec(.wifi, hiddenInZen: true),
+          WidgetSpec(.volume, hiddenInZen: true),
           WidgetSpec(.battery, hoverable: false),
           WidgetSpec(.spacer, hoverable: false),
           WidgetSpec(.jalaliDate, hiddenInZen: true, secondary: true) { $0.clickApp = "Roozegar" },

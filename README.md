@@ -12,7 +12,7 @@ Command Line Tools only; no Xcode needed.
 ## Widgets
 
 Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
-Wi‑Fi (IP) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Spacer
+Wi‑Fi (IP) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Spacer
 
 ## Install
 

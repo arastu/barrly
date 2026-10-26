@@ -26,6 +26,8 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   // battery
   var warnBelow: Int = 20
   var showPercent: Bool = true
+  // volume
+  var volumeStep: Int = 6
   // input source
   var inputSourceMap: [String: String] = [
     "com.apple.keylayout.ABC": "EN",
@@ -65,6 +67,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     wifiShow = try c.decodeIfPresent(WifiShow.self, forKey: .wifiShow) ?? d.wifiShow
     warnBelow = try c.decodeIfPresent(Int.self, forKey: .warnBelow) ?? d.warnBelow
     showPercent = try c.decodeIfPresent(Bool.self, forKey: .showPercent) ?? d.showPercent
+    volumeStep = try c.decodeIfPresent(Int.self, forKey: .volumeStep) ?? d.volumeStep
     inputSourceMap = try c.decodeIfPresent([String: String].self, forKey: .inputSourceMap) ?? d.inputSourceMap
     clipChars = try c.decodeIfPresent(Int.self, forKey: .clipChars) ?? d.clipChars
     soonMinutes = try c.decodeIfPresent(Int.self, forKey: .soonMinutes) ?? d.soonMinutes

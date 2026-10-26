@@ -3,7 +3,7 @@ import Foundation
 /// Every widget Barrly ships. There is no plugin system: this enum is the catalogue.
 enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
   case appleMenu, workspaces, frontApp, nowPlaying
-  case cpu, ram, wifi, battery, jalaliDate, clock, inputSource, meeting
+  case cpu, ram, wifi, battery, jalaliDate, clock, inputSource, meeting, volume
   case spacer
 
   var id: String { rawValue }
@@ -22,6 +22,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .clock: "Clock"
     case .inputSource: "Input source"
     case .meeting: "Meeting"
+    case .volume: "Volume"
     case .spacer: "Spacer"
     }
   }
@@ -40,6 +41,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .clock: "clock"
     case .inputSource: "keyboard"
     case .meeting: "video.fill"
+    case .volume: "speaker.wave.2.fill"
     case .spacer: "arrow.left.and.right"
     }
   }
@@ -56,6 +58,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .inputSource: .teal
     case .meeting: .lavender
     case .nowPlaying: .pink
+    case .volume: .sky
     case .appleMenu, .workspaces, .frontApp, .spacer: nil
     }
   }

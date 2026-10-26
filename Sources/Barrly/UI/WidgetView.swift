@@ -17,6 +17,7 @@ struct WidgetView: View {
     case .clock: ClockWidget(spec: spec)
     case .inputSource: InputSourceWidget(spec: spec)
     case .meeting: MeetingWidget(spec: spec)
+    case .volume: VolumeWidget(spec: spec)
     case .spacer: Color.clear.frame(width: spec.options.width, height: 1)
     }
   }

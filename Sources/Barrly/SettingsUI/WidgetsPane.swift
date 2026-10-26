@@ -161,6 +161,12 @@ struct WidgetOptionsPane: View {
         }
       case .battery:
         Section("Battery") { Stepper("Warn below \(spec.options.warnBelow)%", value: o(\.warnBelow), in: 5...50, step: 5); Toggle("Show percentage", isOn: o(\.showPercent)) }
+      case .volume:
+        Section("Volume") {
+          Toggle("Show percentage", isOn: o(\.showPercent))
+          Stepper("Scroll step: \(spec.options.volumeStep)%", value: o(\.volumeStep), in: 1...25)
+          Text(runtime.volume.state.present ? "Output: \(runtime.volume.state.deviceName). Click mutes, scrolling changes the level." : "No output device with a software volume.").font(.caption).foregroundStyle(.secondary)
+        }
       case .inputSource:
         Section("Input source labels") {
           InputSourceMapEditor(map: o(\.inputSourceMap), currentID: runtime.inputSource.state.id)

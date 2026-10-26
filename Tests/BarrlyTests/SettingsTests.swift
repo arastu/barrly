@@ -22,7 +22,7 @@ import Testing
     #expect(l.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
     #expect(l.right.map(\.name) == ["Status"])
     #expect(l.left[2].tint == .lavender)
-    #expect(l.allWidgets.filter { $0.hiddenInZen }.map(\.kind) == [.nowPlaying, .cpu, .ram, .wifi, .jalaliDate, .inputSource])
+    #expect(l.allWidgets.filter { $0.hiddenInZen }.map(\.kind) == [.nowPlaying, .cpu, .ram, .wifi, .volume, .jalaliDate, .inputSource])
   }
 
   @Test func migrationMovesMeetingAfterNowPlaying() {
@@ -30,9 +30,22 @@ import Testing
     s.version = 1
     let meeting = s.layout.left.remove(at: 2); s.layout.right.append(meeting)
     s.migrate()
-    #expect(s.version == 2)
+    #expect(s.version == 3)
     #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
     #expect(s.layout.right.map(\.name) == ["Status"])
+  }
+
+  @Test func migrationAddsVolumeAfterWifi() {
+    var s = Settings.default
+    s.version = 2
+    s.layout.right[0].widgets.removeAll { $0.kind == .volume }
+    s.migrate()
+    #expect(s.version == 3)
+    let kinds = s.layout.right[0].widgets.map(\.kind)
+    #expect(kinds.firstIndex(of: .volume) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
+    #expect(kinds.filter { $0 == .volume }.count == 1)
+    s.migrate()
+    #expect(kinds == s.layout.right[0].widgets.map(\.kind))
   }
 
   @Test func themeResolution() {
