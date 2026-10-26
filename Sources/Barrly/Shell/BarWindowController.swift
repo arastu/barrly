@@ -11,11 +11,8 @@ final class BarWindowController {
   private(set) var screenID: CGDirectDisplayID
   private var screen: NSScreen
   private let panel: BarPanel
-  private let base = NSView()
   private let container = NSGlassEffectContainerView()
-  private let overlay = ContentOverlayView()
   private let root = NSView()
-  private var frameObservers: [Any] = []
   private var stacks: [Side: NSStackView] = [:]
   private var glass: [UUID: GlassSurfaceView] = [:]
   private var structure: [Side: [UUID]] = [:]
@@ -27,26 +24,18 @@ final class BarWindowController {
     container.spacing = 10
     root.translatesAutoresizingMaskIntoConstraints = false
     container.contentView = root
-    overlay.translatesAutoresizingMaskIntoConstraints = false
-    base.addSubview(container); base.addSubview(overlay)
-    panel.contentView = base
-    NSLayoutConstraint.activate([
-      container.leadingAnchor.constraint(equalTo: base.leadingAnchor), container.trailingAnchor.constraint(equalTo: base.trailingAnchor),
-      container.topAnchor.constraint(equalTo: base.topAnchor), container.bottomAnchor.constraint(equalTo: base.bottomAnchor),
-      overlay.leadingAnchor.constraint(equalTo: base.leadingAnchor), overlay.trailingAnchor.constraint(equalTo: base.trailingAnchor),
-      overlay.topAnchor.constraint(equalTo: base.topAnchor), overlay.bottomAnchor.constraint(equalTo: base.bottomAnchor),
-      root.leadingAnchor.constraint(equalTo: container.leadingAnchor), root.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-      root.topAnchor.constraint(equalTo: container.topAnchor), root.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-    ])
-    root.postsFrameChangedNotifications = true
-    frameObservers.append(NotificationCenter.default.addObserver(forName: NSView.frameDidChangeNotification, object: nil, queue: .main) { [weak self] note in
-      let id = ObjectIdentifier(note.object as AnyObject)
-      MainActor.assumeIsolated { self?.frameChanged(id) }
-    })
+    panel.contentView = container
+    if let cv = panel.contentView {
+      NSLayoutConstraint.activate([
+        container.leadingAnchor.constraint(equalTo: cv.leadingAnchor), container.trailingAnchor.constraint(equalTo: cv.trailingAnchor),
+        container.topAnchor.constraint(equalTo: cv.topAnchor), container.bottomAnchor.constraint(equalTo: cv.bottomAnchor),
+        root.leadingAnchor.constraint(equalTo: container.leadingAnchor), root.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        root.topAnchor.constraint(equalTo: container.topAnchor), root.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+      ])
+    }
     for side in Side.allCases {
       let s = NSStackView(); s.orientation = .horizontal; s.alignment = .centerY; s.distribution = .fill
       s.translatesAutoresizingMaskIntoConstraints = false; s.detachesHiddenViews = true
-      s.postsFrameChangedNotifications = true
       root.addSubview(s); stacks[side] = s
       s.centerYAnchor.constraint(equalTo: root.centerYAnchor).isActive = true
       switch side {
@@ -60,21 +49,6 @@ final class BarWindowController {
   }
 
   func attach(to screen: NSScreen) { self.screen = screen; screenID = screen.displayID; relayout() }
-
-  private func frameChanged(_ id: ObjectIdentifier) {
-    let mine = id == ObjectIdentifier(root) || stacks.values.contains { ObjectIdentifier($0) == id } || glass.values.contains { ObjectIdentifier($0) == id }
-    if mine { syncHosts() }
-  }
-
-  /// Keep every capsule's content exactly over its glass.
-  private func syncHosts() {
-    for g in glass.values {
-      guard g.window != nil, !g.isHiddenOrHasHiddenAncestor else { g.host.isHidden = true; continue }
-      let f = g.convert(g.bounds, to: overlay)
-      if g.host.frame != f { g.host.frame = f }
-      g.host.isHidden = false
-    }
-  }
 
   func close() { panel.orderOut(nil); panel.close() }
 
@@ -111,7 +85,6 @@ final class BarWindowController {
         for s in surfaces {
           let g = glass[s.id] ?? GlassSurfaceView(surfaceID: s.id, runtime: runtime)
           glass[s.id] = g; stack.addArrangedSubview(g)
-          if g.host.superview !== overlay { overlay.addSubview(g.host) }
         }
         structure[side] = ids
       }
@@ -122,9 +95,7 @@ final class BarWindowController {
       }
     }
     let live = Set(settings.layout.allSurfaces.map(\.id))
-    for (id, g) in glass where !live.contains(id) { g.removeFromSuperview(); g.host.removeFromSuperview(); glass[id] = nil }
-    base.layoutSubtreeIfNeeded()
-    syncHosts()
+    for (id, g) in glass where !live.contains(id) { g.removeFromSuperview(); glass[id] = nil }
   }
 
   private func relayout(appearance: AppearanceSettings? = nil) {
