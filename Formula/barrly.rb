@@ -2,8 +2,8 @@ class Barrly < Formula
   desc "Native Liquid Glass bar for macOS with built-in widgets (SketchyBar + Übersicht inspired)"
   homepage "https://github.com/arastu/barrly"
   url "https://github.com/arastu/barrly.git",
-      tag:      "v0.1.7",
-      revision: "67d40d7730c0bb9b5d84dd6960e7ed9547e8235e"
+      tag:      "v0.1.8",
+      revision: "3bd0a045bec0dca11a3fcb1eec1bd444068c2423"
   license "MIT"
   head "https://github.com/arastu/barrly.git", branch: "main"
 
