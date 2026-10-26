@@ -161,6 +161,13 @@ struct WidgetOptionsPane: View {
         }
       case .battery:
         Section("Battery") { Stepper("Warn below \(spec.options.warnBelow)%", value: o(\.warnBelow), in: 5...50, step: 5); Toggle("Show percentage", isOn: o(\.showPercent)) }
+      case .vpn:
+        Section("VPN") {
+          Toggle("Show name", isOn: o(\.showName))
+          Stepper("Name length: \(spec.options.clipChars)", value: o(\.clipChars), in: 4...40)
+          TextField("Open on click (default: VPN settings)", text: o(\.clickApp).orEmpty)
+          Text(runtime.vpn.state.active ? "Connected: " + runtime.vpn.state.connections.map(\.name).joined(separator: ", ") : "No VPN connected. The widget appears only while one is.").font(.caption).foregroundStyle(.secondary)
+        }
       case .volume:
         Section("Volume") {
           Toggle("Show percentage", isOn: o(\.showPercent))

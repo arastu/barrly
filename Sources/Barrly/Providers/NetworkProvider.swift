@@ -35,6 +35,8 @@ final class NetworkProvider {
   }
 
 
+  static func isTunnel(_ name: String) -> Bool { ["utun", "ipsec", "ppp", "tun", "tap", "wg"].contains { name.hasPrefix($0) } }
+
   func refresh() {
     guard let store else { return }
     var ifname: String? = nil, ip: String? = nil
@@ -46,6 +48,13 @@ final class NetworkProvider {
       }
     }
     let wifiName = CWWiFiClient.shared().interface()?.interfaceName
+    // A VPN tunnel becoming the primary route should not turn the Wi-Fi widget into a globe:
+    // keep reporting the Wi-Fi interface and its LAN address while it is up.
+    if let p = ifname, let wifiName, Self.isTunnel(p),
+       let v = SCDynamicStoreCopyValue(store, "State:/Network/Interface/\(wifiName)/IPv4" as CFString) as? [String: Any],
+       let addr = (v["Addresses"] as? [String])?.first {
+      ifname = wifiName; ip = addr
+    }
     let s = NetworkState(interface: ifname, ipv4: ip, isWifi: ifname != nil && ifname == wifiName)
     if s != state { state = s }
   }

@@ -22,10 +22,12 @@ final class Runtime {
   @ObservationIgnored private var _nowPlaying: NowPlayingProvider? = nil
   @ObservationIgnored private var _calendar: CalendarProvider? = nil
   @ObservationIgnored private var _volume: VolumeProvider? = nil
+  @ObservationIgnored private var _vpn: VPNProvider? = nil
 
   var nowPlaying: NowPlayingProvider { if _nowPlaying == nil { _nowPlaying = NowPlayingProvider(scheduler: scheduler) }; return _nowPlaying! }
   var calendar: CalendarProvider { if _calendar == nil { _calendar = CalendarProvider(scheduler: scheduler) }; return _calendar! }
   var volume: VolumeProvider { if _volume == nil { _volume = VolumeProvider() }; return _volume! }
+  var vpn: VPNProvider { if _vpn == nil { _vpn = VPNProvider(scheduler: scheduler) }; return _vpn! }
 
   init(settings: SettingsStore = SettingsStore()) {
     self.settings = settings
@@ -53,6 +55,7 @@ final class Runtime {
     case .workspaces: return !aerospace.workspaces.isEmpty
     case .frontApp: return frontApp.app != nil
     case .volume: return volume.state.present
+    case .vpn: return vpn.state.active
     default: return true
     }
   }
@@ -77,7 +80,7 @@ final class Runtime {
   func refreshAll() {
     scheduler.fireAll()
     aerospace.refreshNow()
-    inputSource.refresh(); network.refresh(); battery.refresh(); appearance.refresh(); _volume?.refresh()
+    inputSource.refresh(); network.refresh(); battery.refresh(); appearance.refresh(); _volume?.refresh(); _vpn?.reloadServices()
   }
 
   /// Open an app by display name ("Calendar", "Activity Monitor") or bundle id. No shell involved.
