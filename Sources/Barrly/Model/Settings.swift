@@ -36,8 +36,6 @@ struct Layout: Codable, Hashable, Sendable {
 enum DisplaySelection: String, Codable, CaseIterable, Sendable { case all, main }
 /// System Liquid Glass variants: regular (frosted) or clear (Dock-like, more see-through).
 enum GlassStyle: String, Codable, CaseIterable, Sendable { case regular, clear }
-/// Which appearance the bar renders in. Dark + clear glass is the look of the system volume HUD.
-enum BarAppearance: String, Codable, CaseIterable, Sendable { case system, light, dark }
 
 struct AppearanceSettings: Codable, Hashable, Sendable {
   var barHeight: Double = 38
@@ -57,8 +55,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
   var colorfulIcons: Bool = true
   var glassStyle: GlassStyle = .clear
   var widgetGlass: Bool = true      // every widget sits on its own glass lozenge
-  var glassClearness: Double = 0    // unused: NSGlassEffectView ignores alpha; kept so saved settings decode
-  var barAppearance: BarAppearance = .system
+  var glassClearness: Double = 0    // 0 = system glass, 1 = nearly invisible
 
   // Tolerant decoding so older saved settings pick up new fields with their defaults.
   init() {}
@@ -83,7 +80,6 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
     glassStyle = try c.decodeIfPresent(GlassStyle.self, forKey: .glassStyle) ?? d.glassStyle
     widgetGlass = try c.decodeIfPresent(Bool.self, forKey: .widgetGlass) ?? d.widgetGlass
     glassClearness = try c.decodeIfPresent(Double.self, forKey: .glassClearness) ?? d.glassClearness
-    barAppearance = try c.decodeIfPresent(BarAppearance.self, forKey: .barAppearance) ?? d.barAppearance
   }
 }
 

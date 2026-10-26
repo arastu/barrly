@@ -15,9 +15,9 @@ struct AppearancePane: View {
         Picker("Displays", selection: $store.settings.appearance.displays) { Text("All displays").tag(DisplaySelection.all); Text("Main display only").tag(DisplaySelection.main) }
       }
       Section("Glass") {
-        Picker("Bar appearance", selection: $store.settings.appearance.barAppearance) { Text("Follow system").tag(BarAppearance.system); Text("Light").tag(BarAppearance.light); Text("Dark").tag(BarAppearance.dark) }
-        Text("Dark with clear glass is the look of the system volume and brightness HUD.").font(.caption).foregroundStyle(.secondary)
         Picker("Glass", selection: $store.settings.appearance.glassStyle) { Text("Clear (like the Dock)").tag(GlassStyle.clear); Text("Regular (frosted)").tag(GlassStyle.regular) }
+        Slider(value: $store.settings.appearance.glassClearness, in: 0...1, step: 0.05) { Text("Clearness: \(Int((store.settings.appearance.glassClearness * 100).rounded()))%") }
+        Text("0% is the system glass as is; higher lets more of the backdrop through.").font(.caption).foregroundStyle(.secondary)
         Toggle("Glass behind every widget", isOn: $store.settings.appearance.widgetGlass)
         Slider(value: $store.settings.appearance.pillHeight, in: 20...48, step: 1) { Text("Capsule height: \(Int(store.settings.appearance.pillHeight)) pt") }
         Slider(value: $store.settings.appearance.pillRadius, in: 0...24, step: 1) { Text("Capsule radius: \(Int(store.settings.appearance.pillRadius)) pt") }

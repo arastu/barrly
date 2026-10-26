@@ -39,13 +39,8 @@ final class Runtime {
     battery = BatteryProvider(scheduler: scheduler)
   }
 
-  /// Dark/light for the bar: the user's choice, else the system appearance.
-  var isDark: Bool {
-    switch settings.settings.appearance.barAppearance { case .dark: true; case .light: false; case .system: appearance.isDark }
-  }
-
   var theme: ResolvedTheme {
-    ResolvedTheme.resolve(appearance: settings.settings.appearance, isDark: isDark,
+    ResolvedTheme.resolve(appearance: settings.settings.appearance, isDark: appearance.isDark,
                           reduceTransparency: appearance.reduceTransparency,
                           increaseContrast: appearance.increaseContrast, reduceMotion: appearance.reduceMotion)
   }
