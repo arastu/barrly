@@ -48,6 +48,7 @@ final class GlassSurfaceView: NSGlassEffectView {
 
   func apply(theme: ResolvedTheme, tint: AccentToken?) {
     cornerRadius = theme.metrics.pillRadius
+    style = theme.glassStyle == .clear ? .clear : .regular
     if let tint { tintColor = NSColor(theme.palette.accent(tint)).withAlphaComponent(theme.isDark ? 0.22 : 0.18) } else { tintColor = nil }
     sync(host.intrinsicContentSize)
   }

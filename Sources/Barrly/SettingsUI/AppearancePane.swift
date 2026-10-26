@@ -15,6 +15,7 @@ struct AppearancePane: View {
         Picker("Displays", selection: $store.settings.appearance.displays) { Text("All displays").tag(DisplaySelection.all); Text("Main display only").tag(DisplaySelection.main) }
       }
       Section("Glass") {
+        Picker("Glass", selection: $store.settings.appearance.glassStyle) { Text("Clear (see-through)").tag(GlassStyle.clear); Text("Regular (frosted)").tag(GlassStyle.regular) }
         Slider(value: $store.settings.appearance.pillHeight, in: 20...48, step: 1) { Text("Capsule height: \(Int(store.settings.appearance.pillHeight)) pt") }
         Slider(value: $store.settings.appearance.pillRadius, in: 0...24, step: 1) { Text("Capsule radius: \(Int(store.settings.appearance.pillRadius)) pt") }
         Slider(value: $store.settings.appearance.chipHeight, in: 14...40, step: 1) { Text("Chip height: \(Int(store.settings.appearance.chipHeight)) pt") }

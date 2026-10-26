@@ -34,6 +34,8 @@ struct Layout: Codable, Hashable, Sendable {
 }
 
 enum DisplaySelection: String, Codable, CaseIterable, Sendable { case all, main }
+/// System Liquid Glass variants: clear (see-through, like the Dock and HUDs) or regular (frosted).
+enum GlassStyle: String, Codable, CaseIterable, Sendable { case clear, regular }
 
 struct AppearanceSettings: Codable, Hashable, Sendable {
   var barHeight: Double = 38
@@ -51,6 +53,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
   var labelFontSize: Double = 13
   var iconFontSize: Double = 14
   var colorfulIcons: Bool = true
+  var glassStyle: GlassStyle = .clear
 
   // Tolerant decoding so older saved settings pick up new fields with their defaults.
   init() {}
@@ -72,6 +75,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
     labelFontSize = try c.decodeIfPresent(Double.self, forKey: .labelFontSize) ?? d.labelFontSize
     iconFontSize = try c.decodeIfPresent(Double.self, forKey: .iconFontSize) ?? d.iconFontSize
     colorfulIcons = try c.decodeIfPresent(Bool.self, forKey: .colorfulIcons) ?? d.colorfulIcons
+    glassStyle = try c.decodeIfPresent(GlassStyle.self, forKey: .glassStyle) ?? d.glassStyle
   }
 }
 
