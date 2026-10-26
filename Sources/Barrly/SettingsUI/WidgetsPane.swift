@@ -166,14 +166,19 @@ struct WidgetOptionsPane: View {
           LabeledContent("Lock shortcut") { ShortcutRecorder(chord: o(\.lockChord), onRecording: { runtime.inputLock.hotKeySuspended = $0 }) }
           LabeledContent("Unlock shortcut") { ShortcutRecorder(chord: o(\.unlockChord), onRecording: { runtime.inputLock.hotKeySuspended = $0 }) }
           if spec.options.lockChord == spec.options.unlockChord { Text("Same keys: press once to lock, again to unlock.").font(.caption).foregroundStyle(.secondary) }
-          Toggle("Show unlock hint while locked", isOn: o(\.showName))
-          Text("Click blocks every keyboard, mouse and trackpad, built-in or external, until you press \(spec.options.unlockChord.display). The screen stays on. Also: barrly://lock, lock/on, lock/off.").font(.caption).foregroundStyle(.secondary)
+          Toggle("Keep Mac awake while locked", isOn: o(\.keepAwake))
+          Text("Click blocks every keyboard, mouse and trackpad, built-in or external, until you press \(spec.options.unlockChord.display). The screen stays on\(spec.options.keepAwake ? " and the Mac does not sleep" : ""). Also: barrly://lock, lock/on, lock/off.").font(.caption).foregroundStyle(.secondary)
           if runtime.inputLock.authorized { Text("Accessibility permission: granted").font(.caption).foregroundStyle(.secondary) }
           else {
             Text("Accessibility permission is required. After a Barrly upgrade macOS may ask again.").font(.caption).foregroundStyle(.red)
             Button("Open Accessibility settings") { runtime.inputLock.requestAuthorization(); runtime.inputLock.openAccessibilitySettings() }
           }
           if let e = runtime.inputLock.lastError { Text(e).font(.caption).foregroundStyle(.red) }
+          if runtime.inputLock.acknowledged {
+            Button("Show the first-use notice again") { runtime.inputLock.resetAcknowledgement() }
+          } else {
+            Text("The first lock shows an explanation and asks for your approval.").font(.caption).foregroundStyle(.secondary)
+          }
         }
       case .vpn:
         Section("VPN") {

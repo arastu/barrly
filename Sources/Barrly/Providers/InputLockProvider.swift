@@ -1,4 +1,5 @@
 import AppKit
+import IOKit.pwr_mgt
 import Observation
 import os
 
@@ -42,12 +43,35 @@ final class InputLockProvider {
   var lockChord: KeyChord? = nil { didSet { if lockChord != oldValue { registerHotKey() } } }
   /// Set while Settings records a shortcut so the hot key does not swallow the key press.
   var hotKeySuspended = false { didSet { if hotKeySuspended != oldValue { registerHotKey() } } }
+  /// Keep the Mac and its display awake while locked (a power assertion, released on unlock).
+  var keepAwake = true { didSet { if locked { keepAwake ? holdAwake() : releaseAwake() } } }
+  @ObservationIgnored private var awakeAssertion: IOPMAssertionID = 0
+  @ObservationIgnored private var activityTimer: Timer? = nil
+  @ObservationIgnored private var activityAssertion: IOPMAssertionID = 0
   @ObservationIgnored private var hotKey: GlobalHotKey? = nil
   @ObservationIgnored nonisolated(unsafe) private var chordKey: Int64 = 37
   @ObservationIgnored nonisolated(unsafe) private var chordFlags: UInt64 = CGEventFlags([.maskControl, .maskAlternate, .maskCommand]).rawValue
   @ObservationIgnored nonisolated(unsafe) private var tap: CFMachPort? = nil
   @ObservationIgnored private var source: CFRunLoopSource? = nil
   private let log = Logger(subsystem: "dev.barrly", category: "inputlock")
+
+  static let acknowledgedKey = "inputLock.acknowledged"
+  /// The user has read the first-use explanation and approved the lock. Until then every lock
+  /// attempt (click, shortcut, URL) shows the explanation instead and only proceeds on approval.
+  private(set) var acknowledged: Bool { didSet { defaults.set(acknowledged, forKey: Self.acknowledgedKey) } }
+  /// Shows the first-use explanation for the given unlock chord and returns the user's decision.
+  /// Replaceable so tests do not open a window.
+  @ObservationIgnored var presentIntro: @MainActor (KeyChord, _ keepAwake: Bool) -> Bool = InputLockProvider.showIntroAlert
+  @ObservationIgnored private var introShowing = false
+  @ObservationIgnored private let defaults: UserDefaults
+
+  init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+    acknowledged = defaults.bool(forKey: Self.acknowledgedKey)
+  }
+
+  /// Makes the next lock attempt show the first-use explanation again.
+  func resetAcknowledgement() { acknowledged = false }
 
   var authorized: Bool { AXIsProcessTrusted() }
 
@@ -71,7 +95,14 @@ final class InputLockProvider {
   }
 
   func lock() {
-    guard !locked else { return }
+    guard !locked, !introShowing else { return }
+    if !acknowledged {
+      introShowing = true
+      let approved = presentIntro(chord, keepAwake)
+      introShowing = false
+      guard approved else { log.info("lock declined at first use"); return }
+      acknowledged = true
+    }
     guard authorized else { requestAuthorization(); lastError = "Accessibility permission is required."; return }
     let info = Unmanaged.passUnretained(self).toOpaque()
     guard let tap = CGEvent.tapCreate(tap: .cghidEventTap, place: .headInsertEventTap, options: .defaultTap,
@@ -85,6 +116,7 @@ final class InputLockProvider {
     CGEvent.tapEnable(tap: tap, enable: true)
     lastError = nil
     locked = true
+    if keepAwake { holdAwake() }
     log.info("input locked")
   }
 
@@ -94,7 +126,58 @@ final class InputLockProvider {
     if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
     tap = nil; source = nil
     locked = false
+    releaseAwake()
     log.info("input unlocked")
+  }
+
+  // Two mechanisms: the assertion stops idle display/system sleep, and a periodic "user is active"
+  // declaration resets the idle timer so the screen saver, dimming and the lock screen stay away
+  // too (the blocked HID events no longer count as activity).
+  private func holdAwake() {
+    guard awakeAssertion == 0 else { return }
+    let r = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
+                                        IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                                        "Barrly input lock" as CFString, &awakeAssertion)
+    if r != kIOReturnSuccess { awakeAssertion = 0; log.error("power assertion failed: \(r)") }
+    declareActivity()
+    activityTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+      Task { @MainActor in self?.declareActivity() }
+    }
+  }
+
+  private func declareActivity() {
+    IOPMAssertionDeclareUserActivity("Barrly input lock" as CFString, kIOPMUserActiveLocal, &activityAssertion)
+  }
+
+  private func releaseAwake() {
+    activityTimer?.invalidate(); activityTimer = nil
+    if activityAssertion != 0 { IOPMAssertionRelease(activityAssertion); activityAssertion = 0 }
+    guard awakeAssertion != 0 else { return }
+    IOPMAssertionRelease(awakeAssertion); awakeAssertion = 0
+  }
+
+  /// First-use explanation: what the lock does, how to get out, and what macOS will ask for.
+  private static func showIntroAlert(chord: KeyChord, keepAwake: Bool) -> Bool {
+    let alert = NSAlert()
+    alert.alertStyle = .informational
+    alert.icon = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Input lock")
+    alert.messageText = "Lock all input?"
+    alert.informativeText = """
+      Barrly's input lock blocks every keyboard, mouse and trackpad, built-in and external, while the \
+      screen stays on\(keepAwake ? " and the Mac is kept awake" : ""). Nothing you type or click gets \
+      through until you press the unlock shortcut:
+
+      \(chord.display)
+
+      macOS asks for the Accessibility permission the first time; the lock cannot work without it. \
+      If the shortcut ever fails to release the lock, hold the power button to shut the Mac down.
+
+      Shortcuts can be changed in Barrly Settings › Widgets › Input lock. This notice is shown once.
+      """
+    alert.addButton(withTitle: "Lock input")
+    alert.addButton(withTitle: "Cancel")
+    NSApp.activate()
+    return alert.runModal() == .alertFirstButtonReturn
   }
 
   // Runs on the main thread (the tap's run loop source lives on the main run loop). Everything it

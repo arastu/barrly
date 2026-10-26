@@ -31,6 +31,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   // input lock
   var unlockChord: KeyChord = KeyChord()
   var lockChord: KeyChord? = KeyChord()
+  var keepAwake: Bool = true   // hold a power assertion while locked so the Mac and display stay on
   // input source
   var inputSourceMap: [String: String] = [
     "com.apple.keylayout.ABC": "EN",
@@ -73,6 +74,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     volumeStep = try c.decodeIfPresent(Int.self, forKey: .volumeStep) ?? d.volumeStep
     unlockChord = try c.decodeIfPresent(KeyChord.self, forKey: .unlockChord) ?? d.unlockChord
     lockChord = c.contains(.lockChord) ? try c.decodeIfPresent(KeyChord.self, forKey: .lockChord) : d.lockChord
+    keepAwake = try c.decodeIfPresent(Bool.self, forKey: .keepAwake) ?? d.keepAwake
     inputSourceMap = try c.decodeIfPresent([String: String].self, forKey: .inputSourceMap) ?? d.inputSourceMap
     clipChars = try c.decodeIfPresent(Int.self, forKey: .clipChars) ?? d.clipChars
     soonMinutes = try c.decodeIfPresent(Int.self, forKey: .soonMinutes) ?? d.soonMinutes
