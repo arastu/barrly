@@ -31,6 +31,10 @@ else
 </dict></plist>
 P
 fi
-codesign --force --deep --sign - "$NEW" >/dev/null
+# Sign with the local "Barrly Code Signing" identity when it exists (stable identity, so TCC grants such
+# as Accessibility survive upgrades); otherwise ad-hoc. Override with BARRLY_SIGN_IDENTITY.
+IDENTITY="${BARRLY_SIGN_IDENTITY:-}"
+if [ -z "$IDENTITY" ] && security find-identity -v -p codesigning 2>/dev/null | grep -q "Barrly Code Signing"; then IDENTITY="Barrly Code Signing"; fi
+codesign --force --deep --sign "${IDENTITY:--}" "$NEW" >/dev/null 2>&1
 rm -rf "$APP"; mv "$NEW" "$APP"
 echo "$APP"

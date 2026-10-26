@@ -16,6 +16,11 @@ Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Vol
 
 ## Install
 
+Privacy grants (Accessibility for the input lock, Calendars) are tied to the app's code identity. Run
+`scripts/make-signing-identity.sh` once to create a local signing identity; the formula and
+`scripts/bundle.sh` then sign with it so the grants survive upgrades.
+
+
 ```sh
 brew install arastu/tap/barrly   # builds from source on your Mac (ad-hoc signed, no Gatekeeper prompt)
 barrly                           # launch;  barrly zen | refresh | settings | quit

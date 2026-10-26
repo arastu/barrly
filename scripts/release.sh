@@ -38,5 +38,6 @@ git add "$FORMULA" && git commit -qm "Formula: $VERSION" && git push -q origin H
 echo "==> brew upgrade"
 brew update >/dev/null 2>&1 || true
 brew upgrade arastu/tap/barrly 2>&1 | grep -E "🍺|Error" || true
+/opt/homebrew/bin/barrly sign || true
 if pgrep -x Barrly >/dev/null; then pkill -x Barrly; sleep 1; open -a /opt/homebrew/opt/barrly/Barrly.app; fi
 echo "released $TAG"
