@@ -2,16 +2,16 @@ class Barrly < Formula
   desc "Native Liquid Glass bar for macOS with built-in widgets (SketchyBar + Übersicht inspired)"
   homepage "https://github.com/arastu/barrly"
   url "https://github.com/arastu/barrly.git",
-      tag:      "v0.13.0",
-      revision: "1e2076da89c57c016e888f51f8b9a15f5df08aee"
+      tag:      "v0.13.1",
+      revision: "dcbfcf17900b6f30c3ccea1215727ab8b230a3de"
   license "MIT"
   head "https://github.com/arastu/barrly.git", branch: "main"
 
-  # Prebuilt on Apple Silicon with the macOS 26 deployment target; one tarball serves both tags.
+  # Prebuilt on Apple Silicon with the macOS 26 deployment target; one tarball serves every tag.
   bottle do
-    root_url "https://github.com/arastu/barrly/releases/download/v0.13.0"
-    sha256 cellar: :any, arm64_golden_gate: "cab150d64a366f9e3a5f12b2a3c532027fdf0d7d8e429d9e4ea343784e11af44"
-    sha256 cellar: :any, arm64_tahoe:       "cab150d64a366f9e3a5f12b2a3c532027fdf0d7d8e429d9e4ea343784e11af44"
+    root_url "https://github.com/arastu/barrly/releases/download/v0.13.1"
+    sha256 cellar: :any, arm64_golden_gate: "1bc2bb00524479bc0abc6a6414714481c1a7f44c7f7fef09ba049847f9fa5f98"
+    sha256 cellar: :any, arm64_tahoe: "1bc2bb00524479bc0abc6a6414714481c1a7f44c7f7fef09ba049847f9fa5f98"
   end
 
   depends_on :macos => :tahoe
@@ -32,14 +32,12 @@ class Barrly < Formula
     system "scripts/build-adapter.sh"
     system "swift", "build", "-c", "release", "--disable-sandbox"
 
-    # The now-playing helper lives beside the .app, not inside it: Homebrew rewrites the perl shebang
-    # and the framework's install name after `install`, which would break the app's code-signature seal.
-    adapter = prefix/"MediaRemoteAdapter"
-    adapter.mkpath
-    cp_r buildpath/"Vendor/build/MediaRemoteAdapter.framework", adapter
-    cp buildpath/"Vendor/build/mediaremote-adapter.pl", adapter
-    cp buildpath/"Vendor/build/MediaRemoteAdapterTestClient", adapter
-    system "scripts/bundle.sh", buildpath/".build/release/Barrly", "Barrly", "dev.barrly.app", prefix
+    stage = buildpath/"stage/MediaRemoteAdapter"
+    stage.mkpath
+    cp_r buildpath/"Vendor/build/MediaRemoteAdapter.framework", stage
+    cp buildpath/"Vendor/build/mediaremote-adapter.pl", stage
+    cp buildpath/"Vendor/build/MediaRemoteAdapterTestClient", stage
+    system "scripts/bundle.sh", buildpath/".build/release/Barrly", "Barrly", "dev.barrly.app", prefix, buildpath/"stage"
     libexec.install "scripts/make-signing-identity.sh"
 
     (bin/"barrly").write <<~SH
@@ -75,6 +73,13 @@ class Barrly < Formula
         *) echo "usage: barrly [start|zen|refresh|settings|lock [on|off]|awake [on|off]|sign|quit]"; exit 2 ;;
       esac
     SH
+  end
+
+  # Homebrew rewrites the perl shebang and the framework's install name after `install`, which
+  # breaks the bundle seal; re-sign (ad-hoc, no keychain needed in the sandbox). Runs after a
+  # bottle pours too. `barrly` later replaces this with the user's local identity.
+  def post_install
+    system "/usr/bin/codesign", "--force", "--deep", "--sign", "-", prefix/"Barrly.app"
   end
 
   service do
