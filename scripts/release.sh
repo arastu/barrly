@@ -58,20 +58,22 @@ for T in $(printf '%s\n' "$NATIVE_TAG" arm64_tahoe | sort -u); do
   BLOCK+="    sha256 cellar: :any, $T: \"$SHA\""$'\n'
 done
 
-echo "==> app zip"
-KEG="$(brew --prefix)/Cellar/barrly/$VERSION/Barrly.app"
+echo "==> app zip (self-contained: adapter inside the bundle, unlike the Homebrew layout)"
+[ -d Vendor/build/MediaRemoteAdapter.framework ] || scripts/build-adapter.sh
+swift build -c release 2>&1 | grep -E "error:" || true
+STAGE="$WORK/stage"; mkdir -p "$STAGE/MediaRemoteAdapter"
+cp -R Vendor/build/MediaRemoteAdapter.framework Vendor/build/mediaremote-adapter.pl Vendor/build/MediaRemoteAdapterTestClient "$STAGE/MediaRemoteAdapter/"
+BARRLY_SIGN_IDENTITY=- scripts/bundle.sh .build/release/Barrly Barrly dev.barrly.app "$WORK" "$STAGE" >/dev/null
 ZIP="$WORK/Barrly-$VERSION.zip"
 if [ -n "${BARRLY_DEVELOPER_ID:-}" ]; then
   # Notarized copy for people who do not use Homebrew (no Gatekeeper warning).
-  cp -R "$KEG" "$WORK/Barrly.app"
   codesign --force --deep --options runtime --timestamp --sign "$BARRLY_DEVELOPER_ID" "$WORK/Barrly.app"
   ditto -c -k --keepParent "$WORK/Barrly.app" "$ZIP"
   xcrun notarytool submit "$ZIP" --keychain-profile "${BARRLY_NOTARY_PROFILE:-barrly-notary}" --wait
   xcrun stapler staple "$WORK/Barrly.app"; rm "$ZIP"
-  ditto -c -k --keepParent "$WORK/Barrly.app" "$ZIP"
-else
-  ditto -c -k --keepParent "$KEG" "$ZIP"
 fi
+ditto -c -k --keepParent "$WORK/Barrly.app" "$ZIP"
+codesign --verify --deep --strict "$WORK/Barrly.app"
 gh release upload "$TAG" -R "$REPO" --clobber "${ASSETS[@]}" "$ZIP" >/dev/null
 
 echo "==> tap formula: bottle block"

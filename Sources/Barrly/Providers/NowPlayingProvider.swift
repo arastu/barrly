@@ -37,10 +37,12 @@ final class NowPlayingProvider {
   }
 
 
-  /// Resources/MediaRemoteAdapter inside the bundle, or the dev build in the repo.
+  /// Resources/MediaRemoteAdapter inside the bundle, MediaRemoteAdapter beside the .app (the Homebrew
+  /// layout: outside the bundle so Homebrew's relocation cannot break the app's seal), or the dev build.
   nonisolated static func adapterDirectory() -> URL? {
     var candidates: [URL] = []
     if let r = Bundle.main.resourceURL { candidates.append(r.appendingPathComponent("MediaRemoteAdapter")) }
+    candidates.append(Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("MediaRemoteAdapter"))
     if let env = ProcessInfo.processInfo.environment["BARRLY_ADAPTER_DIR"] { candidates.append(URL(fileURLWithPath: env)) }
     candidates.append(URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
       .deletingLastPathComponent().appendingPathComponent("Vendor/build"))
