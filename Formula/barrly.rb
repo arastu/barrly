@@ -10,8 +10,8 @@ class Barrly < Formula
   # Prebuilt on Apple Silicon with the macOS 26 deployment target; one tarball serves every tag.
   bottle do
     root_url "https://github.com/arastu/barrly/releases/download/v0.13.1"
-    sha256 cellar: :any, arm64_golden_gate: "1bc2bb00524479bc0abc6a6414714481c1a7f44c7f7fef09ba049847f9fa5f98"
-    sha256 cellar: :any, arm64_tahoe: "1bc2bb00524479bc0abc6a6414714481c1a7f44c7f7fef09ba049847f9fa5f98"
+    sha256 cellar: :any, arm64_golden_gate: "162033ea4f4477e09a20d8b1a9d102773ef564138b213e9cd48a4bcc6a911b0a"
+    sha256 cellar: :any, arm64_tahoe: "162033ea4f4477e09a20d8b1a9d102773ef564138b213e9cd48a4bcc6a911b0a"
   end
 
   depends_on :macos => :tahoe
@@ -32,12 +32,14 @@ class Barrly < Formula
     system "scripts/build-adapter.sh"
     system "swift", "build", "-c", "release", "--disable-sandbox"
 
-    stage = buildpath/"stage/MediaRemoteAdapter"
-    stage.mkpath
-    cp_r buildpath/"Vendor/build/MediaRemoteAdapter.framework", stage
-    cp buildpath/"Vendor/build/mediaremote-adapter.pl", stage
-    cp buildpath/"Vendor/build/MediaRemoteAdapterTestClient", stage
-    system "scripts/bundle.sh", buildpath/".build/release/Barrly", "Barrly", "dev.barrly.app", prefix, buildpath/"stage"
+    # The now-playing helper lives beside the .app, not inside it: Homebrew rewrites the perl shebang
+    # and the framework's install name after `install`, which would break the app's code-signature seal.
+    adapter = prefix/"MediaRemoteAdapter"
+    adapter.mkpath
+    cp_r buildpath/"Vendor/build/MediaRemoteAdapter.framework", adapter
+    cp buildpath/"Vendor/build/mediaremote-adapter.pl", adapter
+    cp buildpath/"Vendor/build/MediaRemoteAdapterTestClient", adapter
+    system "scripts/bundle.sh", buildpath/".build/release/Barrly", "Barrly", "dev.barrly.app", prefix
     libexec.install "scripts/make-signing-identity.sh"
 
     (bin/"barrly").write <<~SH
@@ -73,13 +75,6 @@ class Barrly < Formula
         *) echo "usage: barrly [start|zen|refresh|settings|lock [on|off]|awake [on|off]|sign|quit]"; exit 2 ;;
       esac
     SH
-  end
-
-  # Homebrew rewrites the perl shebang and the framework's install name after `install`, which
-  # breaks the bundle seal; re-sign (ad-hoc, no keychain needed in the sandbox). Runs after a
-  # bottle pours too. `barrly` later replaces this with the user's local identity.
-  def post_install
-    system "/usr/bin/codesign", "--force", "--deep", "--sign", "-", prefix/"Barrly.app"
   end
 
   service do

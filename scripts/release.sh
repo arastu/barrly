@@ -39,6 +39,7 @@ TAPDIR="$(brew --repository "$TAP")"
 [ -d "$TAPDIR/.git" ] || brew tap "$TAP"
 ( cd "$TAPDIR" && git pull -q --ff-only )
 TAPF="$TAPDIR/$FORMULA"
+cp "$FORMULA" "$TAPF"   # the repo's formula is the source of truth; the tap gets tag, revision and bottle on top
 perl -0777 -i -pe 's/(tag:\s+")[^"]+(",\n\s+revision:\s+")[0-9a-f]{40}(")/${1}'"$TAG"'${2}'"$REV"'${3}/s' "$TAPF"
 perl -0777 -i -pe 's/\n  # Prebuilt[^\n]*\n  bottle do.*?\n  end\n//s' "$TAPF"   # previous version's bottle
 
