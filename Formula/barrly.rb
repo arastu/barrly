@@ -7,6 +7,13 @@ class Barrly < Formula
   license "MIT"
   head "https://github.com/arastu/barrly.git", branch: "main"
 
+  # Prebuilt on Apple Silicon with the macOS 26 deployment target; one tarball serves both tags.
+  bottle do
+    root_url "https://github.com/arastu/barrly/releases/download/v0.13.0"
+    sha256 cellar: :any, arm64_golden_gate: "cab150d64a366f9e3a5f12b2a3c532027fdf0d7d8e429d9e4ea343784e11af44"
+    sha256 cellar: :any, arm64_tahoe:       "cab150d64a366f9e3a5f12b2a3c532027fdf0d7d8e429d9e4ea343784e11af44"
+  end
+
   depends_on :macos => :tahoe
   uses_from_macos "perl"
 
@@ -19,6 +26,8 @@ class Barrly < Formula
 
   def install
     ENV.delete("CFLAGS"); ENV.delete("LDFLAGS"); ENV.delete("CXXFLAGS")
+    # Always ad-hoc here (bottles are shared); `barrly` re-signs with the user's local identity afterwards.
+    ENV["BARRLY_SIGN_IDENTITY"] = "-"
     (buildpath/"Vendor/mediaremote-adapter").install resource("mediaremote-adapter")
     system "scripts/build-adapter.sh"
     system "swift", "build", "-c", "release", "--disable-sandbox"
@@ -29,15 +38,23 @@ class Barrly < Formula
     cp buildpath/"Vendor/build/mediaremote-adapter.pl", stage
     cp buildpath/"Vendor/build/MediaRemoteAdapterTestClient", stage
     system "scripts/bundle.sh", buildpath/".build/release/Barrly", "Barrly", "dev.barrly.app", prefix, buildpath/"stage"
+    libexec.install "scripts/make-signing-identity.sh"
 
     (bin/"barrly").write <<~SH
       #!/bin/bash
-      # barrly            launch the bar          barrly zen|refresh|settings|lock   send a command
-      # barrly sign       re-sign Barrly.app with the local "Barrly Code Signing" identity (see caveats)
+      # barrly            launch the bar          barrly zen|refresh|settings|lock|awake   send a command
+      # barrly sign       (re)create the local "Barrly Code Signing" identity and re-sign Barrly.app with it,
+      #                   so macOS privacy grants (Accessibility, Calendars) survive upgrades
       app="#{opt_prefix}/Barrly.app"
+      kc="$HOME/Library/Keychains/barrly-signing.keychain-db"
+      make_identity() {
+        [ -f "$kc" ] && return 0
+        [ -t 0 ] || return 1   # no terminal: leave the ad-hoc signature, `barrly sign` later creates it
+        echo "barrly: creating a local code-signing identity so privacy grants survive upgrades (macOS may ask for your password)"
+        /bin/bash "#{opt_libexec}/make-signing-identity.sh" >/dev/null
+      }
       sign() {
-        kc="$HOME/Library/Keychains/barrly-signing.keychain-db"
-        [ -f "$kc" ] || return 0
+        make_identity || return 0
         /usr/bin/codesign -d -r- "$app" 2>&1 | grep -q 'certificate root' && return 0
         /usr/bin/security unlock-keychain -p barrly "$kc" 2>/dev/null || true
         /usr/bin/codesign --force --deep --keychain "$kc" --sign "Barrly Code Signing" "$app" 2>/dev/null \
@@ -48,16 +65,18 @@ class Barrly < Formula
         refresh)  open "barrly://refresh" ;;
         settings) open "barrly://settings" ;;
         lock)     open "barrly://lock/${2:-on}" ;;
+        awake)    open "barrly://awake/${2:-on}" ;;
         sign)     sign ;;
         quit)     pkill -x Barrly ;;
+        run)      sign >/dev/null; exec "$app/Contents/MacOS/Barrly" ;;   # brew services
         ""|start) sign; open -a "$app" ;;
-        *) echo "usage: barrly [start|zen|refresh|settings|lock [on|off]|sign|quit]"; exit 2 ;;
+        *) echo "usage: barrly [start|zen|refresh|settings|lock [on|off]|awake [on|off]|sign|quit]"; exit 2 ;;
       esac
     SH
   end
 
   service do
-    run [opt_prefix/"Barrly.app/Contents/MacOS/Barrly"]
+    run [opt_bin/"barrly", "run"]
     keep_alive true
     log_path var/"log/barrly.log"
     error_log_path var/"log/barrly.log"
@@ -65,20 +84,17 @@ class Barrly < Formula
 
   def caveats
     <<~EOS
-      Barrly.app is at #{opt_prefix}/Barrly.app, built on this machine.
+      Barrly.app is at #{opt_prefix}/Barrly.app.
 
-      The build is ad-hoc signed, so macOS privacy grants (Accessibility for the input lock, Calendars)
-      would be lost on every upgrade. Create a stable local identity once with the repo's
-      scripts/make-signing-identity.sh; `barrly start` and `barrly sign` then re-sign the app with
-      it after each upgrade (Homebrew's sandbox cannot reach the keychain, so this runs outside it).
-
-      Start it with `barrly`, or at login with either
+      Start it with `barrly`. The first run creates a local code-signing identity and signs the app
+      with it, so macOS privacy grants (Accessibility for the input lock, Calendars) survive upgrades;
+      macOS may ask for your password once. Start it at login with either
         brew services start barrly
       or AeroSpace:
-        after-startup-command = ['exec-and-forget open -a #{opt_prefix}/Barrly.app']
+        after-startup-command = ['exec-and-forget #{opt_bin}/barrly']
 
       Set the macOS menu bar to auto-hide and reserve the strip in your window manager.
-      Commands: barrly zen | refresh | settings
+      Commands: barrly zen | refresh | settings | lock | awake | sign | quit
     EOS
   end
 

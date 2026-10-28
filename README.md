@@ -16,18 +16,29 @@ Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Vol
 
 ## Install
 
-Privacy grants (Accessibility for the input lock, Calendars) are tied to the app's code identity. Run
-`scripts/make-signing-identity.sh` once to create a local signing identity; the formula and
-`scripts/bundle.sh` then sign with it so the grants survive upgrades.
-
-
 ```sh
-brew install arastu/tap/barrly   # builds from source on your Mac (ad-hoc signed, no Gatekeeper prompt)
-barrly                           # launch;  barrly zen | refresh | settings | quit
+brew install arastu/tap/barrly   # prebuilt bottle on Apple Silicon (source build elsewhere)
+barrly                           # launch;  barrly zen | refresh | settings | lock | awake | sign | quit
 ```
 
 The app lives at `/opt/homebrew/opt/barrly/Barrly.app`. Start it at login with
 `brew services start barrly`, or from AeroSpace (see below).
+
+macOS privacy grants (Accessibility for the input lock, Calendars) are tied to the app's code
+identity, and a Homebrew build is only ad-hoc signed. So the first `barrly` run creates a local
+"Barrly Code Signing" identity in its own keychain and signs the app with it; macOS may ask for
+your password once. Every later launch (`barrly`, `brew services`) re-signs after an upgrade, so
+the grants survive. `barrly sign` does the same by hand.
+
+Without Homebrew: download `Barrly-<version>.zip` from the
+[releases page](https://github.com/arastu/barrly/releases), unzip, and clear the quarantine flag
+before the first launch, since the app is not notarized:
+
+```sh
+xattr -dr com.apple.quarantine ~/Downloads/Barrly.app && open ~/Downloads/Barrly.app
+```
+
+Requires macOS 26 (Liquid Glass) or newer.
 
 From a checkout:
 
@@ -52,7 +63,7 @@ open barrly://awake           # toggle keep-awake (also: awake/on, awake/off)
 ```
 
 Launch at login: `brew services start barrly`, Settings › Advanced, or from AeroSpace:
-`after-startup-command = ['exec-and-forget open -a /opt/homebrew/opt/barrly/Barrly.app']`.
+`after-startup-command = ['exec-and-forget /opt/homebrew/bin/barrly']`.
 
 ## How it is built
 
