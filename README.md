@@ -12,7 +12,7 @@ Command Line Tools only; no Xcode needed.
 ## Widgets
 
 Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
-Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Input lock (global shortcut or click blocks all keyboards and mice until the unlock chord, default ⌃⌥⌘L for both; keeps the Mac awake while locked; the first use shows an explanation and asks for approval) · Spacer
+Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Keep awake (an owl: click keeps the Mac and display awake, like caffeinate; the input lock switches it on while locked) · Input lock (global shortcut or click blocks all keyboards and mice until the unlock chord, default ⌃⌥⌘L for both; keeps the Mac awake while locked; the first use shows an explanation and asks for approval) · Spacer
 
 ## Install
 
@@ -48,6 +48,7 @@ open barrly://mode/zen/on     # or /off
 open barrly://refresh         # refresh every widget
 open barrly://settings        # open the Settings window (also: right‑click the Apple logo)
 open barrly://lock            # block all keyboards and mice until the unlock chord (also: lock/on, lock/off)
+open barrly://awake           # toggle keep-awake (also: awake/on, awake/off)
 ```
 
 Launch at login: `brew services start barrly`, Settings › Advanced, or from AeroSpace:

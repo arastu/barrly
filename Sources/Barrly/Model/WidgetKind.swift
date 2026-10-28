@@ -3,7 +3,7 @@ import Foundation
 /// Every widget Barrly ships. There is no plugin system: this enum is the catalogue.
 enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
   case appleMenu, workspaces, frontApp, nowPlaying
-  case cpu, ram, wifi, battery, jalaliDate, clock, inputSource, meeting, volume, vpn, inputLock
+  case cpu, ram, wifi, battery, jalaliDate, clock, inputSource, meeting, volume, vpn, keepAwake, inputLock
   case spacer
 
   var id: String { rawValue }
@@ -24,6 +24,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .meeting: "Meeting"
     case .volume: "Volume"
     case .vpn: "VPN"
+    case .keepAwake: "Keep awake"
     case .inputLock: "Input lock"
     case .spacer: "Spacer"
     }
@@ -45,6 +46,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .meeting: "video.fill"
     case .volume: "speaker.wave.2.fill"
     case .vpn: "lock.shield.fill"
+    case .keepAwake: "bird.fill"   // placeholder; the UI draws OwlShape instead
     case .inputLock: "lock.open.fill"
     case .spacer: "arrow.left.and.right"
     }
@@ -64,6 +66,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .nowPlaying: .pink
     case .volume: .sky
     case .vpn: .green
+    case .keepAwake: .lavender   // asleep; the awake owl lights up peach
     case .inputLock: .yellow
     case .appleMenu, .workspaces, .frontApp, .spacer: nil
     }

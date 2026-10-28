@@ -6,7 +6,13 @@ set -euo pipefail
 NAME="Barrly Code Signing"
 KC="$HOME/Library/Keychains/barrly-signing.keychain-db"
 PASS="barrly"   # protects only this throwaway keychain; the identity has no value outside this Mac
-if security find-identity -v -p codesigning 2>/dev/null | grep -q "$NAME"; then echo "identity '$NAME' already exists"; exit 0; fi
+if [ "${1:-}" = "--recreate" ] && [ -f "$KC" ]; then
+  # Keychain lost or password unknown: set the old one aside (a new certificate means granting Accessibility again).
+  LIST=$(security list-keychains -d user | tr -d '"' | sed 's/^ *//' | grep -v barrly-signing || true)
+  security list-keychains -d user -s $LIST
+  mv "$KC" "$KC.bak-$(date +%Y%m%d%H%M%S)"
+fi
+if security find-identity -v -p codesigning 2>/dev/null | grep -q "$NAME"; then echo "identity '$NAME' already exists (--recreate replaces it)"; exit 0; fi
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes -keyout "$TMP/key.pem" -out "$TMP/cert.pem" \
   -subj "/CN=$NAME/O=Barrly" -addext "keyUsage=critical,digitalSignature" \

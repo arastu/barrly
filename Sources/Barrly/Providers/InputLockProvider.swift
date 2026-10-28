@@ -1,5 +1,4 @@
 import AppKit
-import IOKit.pwr_mgt
 import Observation
 import os
 
@@ -43,11 +42,10 @@ final class InputLockProvider {
   var lockChord: KeyChord? = nil { didSet { if lockChord != oldValue { registerHotKey() } } }
   /// Set while Settings records a shortcut so the hot key does not swallow the key press.
   var hotKeySuspended = false { didSet { if hotKeySuspended != oldValue { registerHotKey() } } }
-  /// Keep the Mac and its display awake while locked (a power assertion, released on unlock).
-  var keepAwake = true { didSet { if locked { keepAwake ? holdAwake() : releaseAwake() } } }
-  @ObservationIgnored private var awakeAssertion: IOPMAssertionID = 0
-  @ObservationIgnored private var activityTimer: Timer? = nil
-  @ObservationIgnored private var activityAssertion: IOPMAssertionID = 0
+  /// Keep the Mac and its display awake while locked: the lock holds the shared keep-awake
+  /// provider for as long as it is engaged and lets go on unlock (a manual keep-awake stays on).
+  var keepAwake = true { didSet { if locked { awake.setLockHeld(keepAwake) } } }
+  let awake: KeepAwakeProvider
   @ObservationIgnored private var hotKey: GlobalHotKey? = nil
   @ObservationIgnored nonisolated(unsafe) private var chordKey: Int64 = 37
   @ObservationIgnored nonisolated(unsafe) private var chordFlags: UInt64 = CGEventFlags([.maskControl, .maskAlternate, .maskCommand]).rawValue
@@ -65,7 +63,8 @@ final class InputLockProvider {
   @ObservationIgnored private var introShowing = false
   @ObservationIgnored private let defaults: UserDefaults
 
-  init(defaults: UserDefaults = .standard) {
+  init(awake: KeepAwakeProvider = KeepAwakeProvider(), defaults: UserDefaults = .standard) {
+    self.awake = awake
     self.defaults = defaults
     acknowledged = defaults.bool(forKey: Self.acknowledgedKey)
   }
@@ -116,7 +115,7 @@ final class InputLockProvider {
     CGEvent.tapEnable(tap: tap, enable: true)
     lastError = nil
     locked = true
-    if keepAwake { holdAwake() }
+    if keepAwake { awake.setLockHeld(true) }
     log.info("input locked")
   }
 
@@ -126,34 +125,8 @@ final class InputLockProvider {
     if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
     tap = nil; source = nil
     locked = false
-    releaseAwake()
+    awake.setLockHeld(false)
     log.info("input unlocked")
-  }
-
-  // Two mechanisms: the assertion stops idle display/system sleep, and a periodic "user is active"
-  // declaration resets the idle timer so the screen saver, dimming and the lock screen stay away
-  // too (the blocked HID events no longer count as activity).
-  private func holdAwake() {
-    guard awakeAssertion == 0 else { return }
-    let r = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
-                                        IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                                        "Barrly input lock" as CFString, &awakeAssertion)
-    if r != kIOReturnSuccess { awakeAssertion = 0; log.error("power assertion failed: \(r)") }
-    declareActivity()
-    activityTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-      Task { @MainActor in self?.declareActivity() }
-    }
-  }
-
-  private func declareActivity() {
-    IOPMAssertionDeclareUserActivity("Barrly input lock" as CFString, kIOPMUserActiveLocal, &activityAssertion)
-  }
-
-  private func releaseAwake() {
-    activityTimer?.invalidate(); activityTimer = nil
-    if activityAssertion != 0 { IOPMAssertionRelease(activityAssertion); activityAssertion = 0 }
-    guard awakeAssertion != 0 else { return }
-    IOPMAssertionRelease(awakeAssertion); awakeAssertion = 0
   }
 
   /// First-use explanation: what the lock does, how to get out, and what macOS will ask for.

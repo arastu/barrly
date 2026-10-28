@@ -45,7 +45,7 @@ private struct SurfaceSection: View {
       ForEach(surface.widgets) { w in
         HStack {
           Toggle("", isOn: Binding(get: { w.enabled }, set: { v in runtime.settings.update(w.id) { $0.enabled = v } })).labelsHidden().toggleStyle(.switch).controlSize(.mini)
-          Image(systemName: w.kind.symbol).frame(width: 18).foregroundStyle(.secondary)
+          KindIcon(kind: w.kind).frame(width: 18).foregroundStyle(.secondary)
           Text(w.kind.title)
           Spacer()
           if w.hiddenInZen { Image(systemName: "moon.zzz").foregroundStyle(.tertiary).help("Hidden in zen mode") }
@@ -67,6 +67,15 @@ private struct SurfaceSection: View {
   }
 }
 
+/// Catalogue icon: the kind's SF Symbol, or the owl for keep awake (no owl in SF Symbols).
+struct KindIcon: View {
+  let kind: WidgetKind
+  var body: some View {
+    if kind == .keepAwake { Image(nsImage: OwlShape.templateImage(awake: true, size: 15)) }
+    else { Image(systemName: kind.symbol) }
+  }
+}
+
 private struct AddWidgetMenu: View {
   let surfaceID: UUID
   @Environment(Runtime.self) private var runtime
@@ -74,7 +83,7 @@ private struct AddWidgetMenu: View {
     let used = Set(runtime.settings.settings.layout.allWidgets.map(\.kind))
     Menu {
       ForEach(WidgetKind.allCases.filter { $0.allowsDuplicates || !used.contains($0) }) { kind in
-        Button { runtime.settings.updateSurface(surfaceID) { $0.widgets.append(WidgetSpec(kind)) } } label: { Label(kind.title, systemImage: kind.symbol) }
+        Button { runtime.settings.updateSurface(surfaceID) { $0.widgets.append(WidgetSpec(kind)) } } label: { Label { Text(kind.title) } icon: { KindIcon(kind: kind) } }
       }
     } label: { Label("Add widget", systemImage: "plus") }
     .menuStyle(.borderlessButton).foregroundStyle(.secondary).padding(.leading, 4)
@@ -166,7 +175,7 @@ struct WidgetOptionsPane: View {
           LabeledContent("Lock shortcut") { ShortcutRecorder(chord: o(\.lockChord), onRecording: { runtime.inputLock.hotKeySuspended = $0 }) }
           LabeledContent("Unlock shortcut") { ShortcutRecorder(chord: o(\.unlockChord), onRecording: { runtime.inputLock.hotKeySuspended = $0 }) }
           if spec.options.lockChord == spec.options.unlockChord { Text("Same keys: press once to lock, again to unlock.").font(.caption).foregroundStyle(.secondary) }
-          Toggle("Keep Mac awake while locked", isOn: o(\.keepAwake))
+          Toggle("Keep Mac awake while locked (switches the Keep awake widget on)", isOn: o(\.keepAwake))
           Text("Click blocks every keyboard, mouse and trackpad, built-in or external, until you press \(spec.options.unlockChord.display). The screen stays on\(spec.options.keepAwake ? " and the Mac does not sleep" : ""). Also: barrly://lock, lock/on, lock/off.").font(.caption).foregroundStyle(.secondary)
           if runtime.inputLock.authorized { Text("Accessibility permission: granted").font(.caption).foregroundStyle(.secondary) }
           else {
@@ -179,6 +188,11 @@ struct WidgetOptionsPane: View {
           } else {
             Text("The first lock shows an explanation and asks for your approval.").font(.caption).foregroundStyle(.secondary)
           }
+        }
+      case .keepAwake:
+        Section("Keep awake") {
+          Toggle("Keep the Mac awake", isOn: Binding(get: { runtime.keepAwake.manual }, set: { runtime.keepAwake.setManual($0) }))
+          Text("Click toggles it. While on, the Mac and its display do not sleep and the screen saver stays away. The input lock switches it on while locked\(runtime.keepAwake.lockHeld ? " (held by the lock now)" : ""). Also: barrly://awake, awake/on, awake/off.").font(.caption).foregroundStyle(.secondary)
         }
       case .vpn:
         Section("VPN") {

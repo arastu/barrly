@@ -19,7 +19,8 @@ final class Runtime {
   let inputSource = InputSourceProvider()
   let network = NetworkProvider()
   let aerospace = AerospaceProvider()
-  let inputLock = InputLockProvider()
+  let keepAwake = KeepAwakeProvider()
+  let inputLock: InputLockProvider
   @ObservationIgnored private var _nowPlaying: NowPlayingProvider? = nil
   @ObservationIgnored private var _calendar: CalendarProvider? = nil
   @ObservationIgnored private var _volume: VolumeProvider? = nil
@@ -37,6 +38,7 @@ final class Runtime {
     cpu = CpuProvider(scheduler: scheduler)
     memory = MemoryProvider(scheduler: scheduler)
     battery = BatteryProvider(scheduler: scheduler)
+    inputLock = InputLockProvider(awake: keepAwake)
   }
 
   var theme: ResolvedTheme {
@@ -75,7 +77,7 @@ final class Runtime {
   func isSurfaceVisible(_ surface: Surface) -> Bool { visibleWidgets(of: surface).contains { $0.kind != .spacer } }
 
   /// Stop child processes before exit.
-  func shutdown() { _nowPlaying?.stop(); inputLock.unlock() }
+  func shutdown() { _nowPlaying?.stop(); inputLock.unlock(); keepAwake.setManual(false) }
 
   /// Refresh everything (Apple menu click).
   func refreshAll() {
@@ -112,6 +114,9 @@ final class Runtime {
     case "lock": inputLock.toggle()
     case "lock/on": inputLock.lock()
     case "lock/off": inputLock.unlock()
+    case "awake": keepAwake.toggle()
+    case "awake/on": keepAwake.setManual(true)
+    case "awake/off": keepAwake.setManual(false)
     case "settings": showSettings()
     default: log.warning("unknown url: \(url)")
     }

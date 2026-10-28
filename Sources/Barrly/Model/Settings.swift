@@ -82,7 +82,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 5
+  var version: Int = 6
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
@@ -123,6 +123,18 @@ struct Settings: Codable, Hashable, Sendable {
       }
       version = 5
     }
+    if version < 6 {
+      // v6: the keep-awake toggle sits right before the input lock (or at the end of the status capsule).
+      if !layout.allWidgets.contains(where: { $0.kind == .keepAwake }) {
+        if let s = layout.right.firstIndex(where: { $0.widgets.contains { $0.kind == .inputLock } }),
+           let w = layout.right[s].widgets.firstIndex(where: { $0.kind == .inputLock }) {
+          layout.right[s].widgets.insert(WidgetSpec(.keepAwake), at: w)
+        } else if !layout.right.isEmpty {
+          layout.right[layout.right.count - 1].widgets.append(WidgetSpec(.keepAwake))
+        }
+      }
+      version = 6
+    }
   }
 
   /// Reproduces the user's sketchybar bar exactly.
@@ -156,6 +168,7 @@ struct Settings: Codable, Hashable, Sendable {
           WidgetSpec(.clock) { $0.clickApp = "Calendar" },
           WidgetSpec(.spacer, hoverable: false),
           WidgetSpec(.inputSource, hiddenInZen: true, hoverable: false),
+          WidgetSpec(.keepAwake),
           WidgetSpec(.inputLock),
         ]),
       ]

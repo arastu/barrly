@@ -34,7 +34,12 @@ fi
 # Sign with the local "Barrly Code Signing" identity when it exists (stable identity, so TCC grants such
 # as Accessibility survive upgrades); otherwise ad-hoc. Override with BARRLY_SIGN_IDENTITY.
 IDENTITY="${BARRLY_SIGN_IDENTITY:-}"
-if [ -z "$IDENTITY" ] && security find-identity -v -p codesigning 2>/dev/null | grep -q "Barrly Code Signing"; then IDENTITY="Barrly Code Signing"; fi
+KC="$HOME/Library/Keychains/barrly-signing.keychain-db"
+if [ -z "$IDENTITY" ] && [ -f "$KC" ] && security find-identity -v -p codesigning "$KC" 2>/dev/null | grep -q "Barrly Code Signing"; then
+  # Unlock with the scripted password up front; a locked keychain would otherwise hang codesign on a prompt.
+  if security unlock-keychain -p barrly "$KC" 2>/dev/null; then IDENTITY="Barrly Code Signing"
+  else echo "bundle: barrly-signing keychain will not unlock; signing ad-hoc (scripts/make-signing-identity.sh --recreate)" >&2; fi
+fi
 codesign --force --deep --sign "${IDENTITY:--}" "$NEW" >/dev/null 2>&1
 rm -rf "$APP"; mv "$NEW" "$APP"
 echo "$APP"
