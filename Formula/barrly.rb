@@ -75,6 +75,13 @@ class Barrly < Formula
     SH
   end
 
+  # Homebrew rewrites the perl shebang and the framework's install name after `install`, which
+  # breaks the bundle seal; re-sign (ad-hoc, no keychain needed in the sandbox). Runs after a
+  # bottle pours too. `barrly` later replaces this with the user's local identity.
+  def post_install
+    system "/usr/bin/codesign", "--force", "--deep", "--sign", "-", prefix/"Barrly.app"
+  end
+
   service do
     run [opt_bin/"barrly", "run"]
     keep_alive true
