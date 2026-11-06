@@ -82,7 +82,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 6
+  var version: Int = 7
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
@@ -135,6 +135,15 @@ struct Settings: Codable, Hashable, Sendable {
       }
       version = 6
     }
+    if version < 7 {
+      // v7: the Rex sessions widget (auto-hiding) opens the status capsule, right before CPU.
+      if !layout.allWidgets.contains(where: { $0.kind == .rex }),
+         let s = layout.right.firstIndex(where: { $0.widgets.contains { $0.kind == .cpu } }),
+         let w = layout.right[s].widgets.firstIndex(where: { $0.kind == .cpu }) {
+        layout.right[s].widgets.insert(WidgetSpec(.rex), at: w)
+      }
+      version = 7
+    }
   }
 
   /// Reproduces the user's sketchybar bar exactly.
@@ -157,6 +166,7 @@ struct Settings: Codable, Hashable, Sendable {
       center: [],
       right: [
         Surface(name: "Status", widgets: [
+          WidgetSpec(.rex),
           WidgetSpec(.cpu, hiddenInZen: true, secondary: true),
           WidgetSpec(.ram, hiddenInZen: true, secondary: true),
           WidgetSpec(.wifi, hiddenInZen: true),

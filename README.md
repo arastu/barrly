@@ -12,7 +12,7 @@ Command Line Tools only; no Xcode needed.
 ## Widgets
 
 Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
-Wi‑Fi (IP) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Keep awake (an owl: click keeps the Mac and display awake, like caffeinate; the input lock switches it on while locked) · Input lock (global shortcut or click blocks all keyboards and mice until the unlock chord, default ⌃⌥⌘L for both; keeps the Mac awake while locked; the first use shows an explanation and asks for approval) · Spacer
+Wi‑Fi (icon; click copies the IP and shows it for a moment; optional full-IP label) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Rex (sessions, via the `rex` CLI: the count, or the session a program is waiting on, from the OSC 7501 program-status protocol; auto-hides while Rex isn't running; click opens Rex on that session) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Keep awake (an owl: click keeps the Mac and display awake, like caffeinate; the input lock switches it on while locked) · Input lock (global shortcut or click blocks all keyboards and mice until the unlock chord, default ⌃⌥⌘L for both; keeps the Mac awake while locked; the first use shows an explanation and asks for approval) · Spacer
 
 ## Install
 

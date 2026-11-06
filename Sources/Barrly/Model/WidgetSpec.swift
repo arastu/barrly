@@ -22,7 +22,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   // cpu / ram
   var interval: Double = 5
   // wifi
-  var wifiShow: WifiShow = .lastOctet
+  var wifiShow: WifiShow = .none   // icon only; a click copies the IP and shows it for a moment
   // battery
   var warnBelow: Int = 20
   var showPercent: Bool = true
@@ -48,7 +48,7 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   // icon colour: "auto" (follow the global toggle + the widget's default), "none", or an AccentToken raw value
   var iconTint: String = "auto"
 
-  enum WifiShow: String, Codable, CaseIterable, Sendable { case lastOctet, fullIP, none }
+  enum WifiShow: String, Codable, CaseIterable, Sendable { case fullIP, none }
 
   // Tolerant decoding: missing keys fall back to defaults so old settings keep loading.
   init() {}
@@ -68,7 +68,8 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     maxChars = try c.decodeIfPresent(Int.self, forKey: .maxChars) ?? d.maxChars
     includeBrowsers = try c.decodeIfPresent(Bool.self, forKey: .includeBrowsers) ?? d.includeBrowsers
     interval = try c.decodeIfPresent(Double.self, forKey: .interval) ?? d.interval
-    wifiShow = try c.decodeIfPresent(WifiShow.self, forKey: .wifiShow) ?? d.wifiShow
+    // Decoded by raw value so a mode that no longer exists (the old "lastOctet") falls back instead of failing the load.
+    wifiShow = (try c.decodeIfPresent(String.self, forKey: .wifiShow)).flatMap(WifiShow.init(rawValue:)) ?? d.wifiShow
     warnBelow = try c.decodeIfPresent(Int.self, forKey: .warnBelow) ?? d.warnBelow
     showPercent = try c.decodeIfPresent(Bool.self, forKey: .showPercent) ?? d.showPercent
     volumeStep = try c.decodeIfPresent(Int.self, forKey: .volumeStep) ?? d.volumeStep

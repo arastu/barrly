@@ -53,13 +53,18 @@ struct JalaliDateWidget: View {
   }
 }
 
+/// "04%" … "100%": two digits at least, so the chip keeps its width below 10%.
+nonisolated func paddedPercent(_ fraction: Double) -> String {
+  String(format: "%02d%%", max(0, Int((fraction * 100).rounded())))
+}
+
 struct CpuWidget: View {
   let spec: WidgetSpec
   @Environment(Runtime.self) private var runtime
   @Environment(\.theme) private var theme
   var body: some View {
     WidgetCell(spec: spec, onClick: { runtime.open(app: spec.options.clickApp ?? "Activity Monitor") }) {
-      IconLabel(symbol: "cpu", label: "\(Int((runtime.cpu.usage * 100).rounded()))%", iconColor: theme.iconTint(for: spec))
+      IconLabel(symbol: "cpu", label: paddedPercent(runtime.cpu.usage), iconColor: theme.iconTint(for: spec))
     }
     .onChange(of: spec.options.interval, initial: true) { _, v in runtime.cpu.setInterval(max(1, v)) }
   }
@@ -71,7 +76,7 @@ struct RamWidget: View {
   @Environment(\.theme) private var theme
   var body: some View {
     WidgetCell(spec: spec, onClick: { runtime.open(app: spec.options.clickApp ?? "Activity Monitor") }) {
-      IconLabel(symbol: "memorychip", label: "\(Int((runtime.memory.usedFraction * 100).rounded()))%", iconColor: theme.iconTint(for: spec))
+      IconLabel(symbol: "memorychip", label: paddedPercent(runtime.memory.usedFraction), iconColor: theme.iconTint(for: spec))
     }
     .onChange(of: spec.options.interval, initial: true) { _, v in runtime.memory.setInterval(max(1, v)) }
   }
@@ -87,7 +92,7 @@ struct WifiWidget: View {
     let label: String? = {
       guard let ip = n.ipv4 else { return "off" }
       if flash { return ip }
-      switch spec.options.wifiShow { case .lastOctet: return "." + (ip.split(separator: ".").last.map(String.init) ?? ip); case .fullIP: return ip; case .none: return nil }
+      switch spec.options.wifiShow { case .fullIP: return ip; case .none: return nil }
     }()
     WidgetCell(spec: spec, onClick: { copy(n.ipv4) }) {
       IconLabel(symbol: n.connected ? (n.isWifi ? "wifi" : "network") : "wifi.slash", label: label,

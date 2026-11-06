@@ -165,8 +165,8 @@ struct WidgetOptionsPane: View {
         }
       case .wifi:
         Section("Wi‑Fi") {
-          Picker("Show", selection: o(\.wifiShow)) { Text("Last octet").tag(WidgetOptions.WifiShow.lastOctet); Text("Full IP").tag(WidgetOptions.WifiShow.fullIP); Text("Icon only").tag(WidgetOptions.WifiShow.none) }
-          Text("Click copies the IP address.").font(.caption).foregroundStyle(.secondary)
+          Picker("Show", selection: o(\.wifiShow)) { Text("Icon only").tag(WidgetOptions.WifiShow.none); Text("Full IP").tag(WidgetOptions.WifiShow.fullIP) }
+          Text("Click copies the IP address and shows it for a moment.").font(.caption).foregroundStyle(.secondary)
         }
       case .battery:
         Section("Battery") { Stepper("Warn below \(spec.options.warnBelow)%", value: o(\.warnBelow), in: 5...50, step: 5); Toggle("Show percentage", isOn: o(\.showPercent)) }
@@ -200,6 +200,19 @@ struct WidgetOptionsPane: View {
           Stepper("Name length: \(spec.options.clipChars)", value: o(\.clipChars), in: 4...40)
           TextField("Open on click (default: VPN settings)", text: o(\.clickApp).orEmpty)
           Text(runtime.vpn.state.active ? "Connected: " + runtime.vpn.state.connections.map(\.name).joined(separator: ", ") : "No VPN connected. The widget appears only while one is.").font(.caption).foregroundStyle(.secondary)
+        }
+      case .rex:
+        Section("Rex") {
+          Toggle("Show session count", isOn: o(\.showName))
+          Stepper("Label length: \(spec.options.clipChars)", value: o(\.clipChars), in: 6...40)
+          TextField("Open on click (default: Rex)", text: o(\.clickApp).orEmpty)
+          if runtime.rex.cliPath == nil {
+            Text("The rex command was not found. Install Rex, or set BARRLY_REX_CLI to its path.").font(.caption).foregroundStyle(.red)
+          } else if runtime.rex.state.connected {
+            Text("Sessions: " + (runtime.rex.state.sessions.isEmpty ? "none" : runtime.rex.state.sessions.map(\.label).joined(separator: ", ")) + ". A program that reports its status (OSC 7501) tints the chip; click goes to the session waiting on you. That needs Remote Control on in Rex's settings, under Rex Server.").font(.caption).foregroundStyle(.secondary)
+          } else {
+            Text("Rex isn't running. The widget appears only while it is." + (runtime.rex.lastError.map { " (\($0))" } ?? "")).font(.caption).foregroundStyle(.secondary)
+          }
         }
       case .volume:
         Section("Volume") {
