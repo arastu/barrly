@@ -2,16 +2,16 @@ class Barrly < Formula
   desc "Native Liquid Glass bar for macOS with built-in widgets (SketchyBar + Übersicht inspired)"
   homepage "https://github.com/arastu/barrly"
   url "https://github.com/arastu/barrly.git",
-      tag:      "v0.13.1",
-      revision: "dcbfcf17900b6f30c3ccea1215727ab8b230a3de"
+      tag:      "v0.14.0",
+      revision: "f1abe2b5b6e80a3dae4814ee5e9e618ea81434de"
   license "MIT"
   head "https://github.com/arastu/barrly.git", branch: "main"
 
   # Prebuilt on Apple Silicon with the macOS 26 deployment target; one tarball serves every tag.
   bottle do
-    root_url "https://github.com/arastu/barrly/releases/download/v0.13.1"
-    sha256 cellar: :any, arm64_golden_gate: "162033ea4f4477e09a20d8b1a9d102773ef564138b213e9cd48a4bcc6a911b0a"
-    sha256 cellar: :any, arm64_tahoe: "162033ea4f4477e09a20d8b1a9d102773ef564138b213e9cd48a4bcc6a911b0a"
+    root_url "https://github.com/arastu/barrly/releases/download/v0.14.0"
+    sha256 cellar: :any, arm64_golden_gate: "5136da6a3e1f9ea35752135e6ec1309683110cd30e65b26b94255c5f3b362362"
+    sha256 cellar: :any, arm64_tahoe: "5136da6a3e1f9ea35752135e6ec1309683110cd30e65b26b94255c5f3b362362"
   end
 
   depends_on :macos => :tahoe
