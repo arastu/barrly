@@ -9,6 +9,7 @@ struct WidgetView: View {
     case .workspaces: WorkspacesWidget(spec: spec)
     case .frontApp: FrontAppWidget(spec: spec)
     case .nowPlaying: NowPlayingWidget(spec: spec)
+    case .rex: RexWidget(spec: spec)
     case .cpu: CpuWidget(spec: spec)
     case .ram: RamWidget(spec: spec)
     case .wifi: WifiWidget(spec: spec)
