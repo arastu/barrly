@@ -12,7 +12,7 @@ Command Line Tools only; no Xcode needed.
 ## Widgets
 
 Apple menu · AeroSpace workspaces (real app icons) · Front app · Now playing · CPU · Memory ·
-Wi‑Fi (icon; click copies the IP and shows it for a moment; optional full-IP label) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Rex (sessions, via the `rex` CLI: the count, or the session a program is waiting on, from the OSC 7501 program-status protocol; auto-hides while Rex isn't running; click opens Rex on that session) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Keep awake (an owl: click keeps the Mac and display awake, like caffeinate; the input lock switches it on while locked) · Input lock (global shortcut or click blocks all keyboards and mice until the unlock chord, default ⌃⌥⌘L for both; keeps the Mac awake while locked; the first use shows an explanation and asks for approval) · Spacer
+Wi‑Fi (icon; click copies the IP and shows it for a moment; optional full-IP label) · VPN (auto-hides; SCNetworkConnection + tunnel interfaces) · Claude Code (Tea style, after [ianiv/tea](https://github.com/ianiv/tea): the Claude app icon, a green dot while a session works, and a count of the sessions that need you; click lists every Claude Code session on the Mac grouped by status — Ready for review, Needs input, Working, Idle, Completed — with what it is doing, its Rex location, working directory and age; a session opens in Rex: its pane, or a new tab running `claude attach` for a background agent; polls `claude agents --json` and the files under `~/.claude`) · Rex (sessions, via the `rex` CLI: the count, or the session a program is waiting on, from the OSC 7501 program-status protocol; auto-hides while Rex isn't running; click lists every session and the process running in each of its panes, like Rex's block switcher, and a pane in the list opens in Rex) · Volume (CoreAudio; click mutes, scroll adjusts) · Battery · Jalali date · Clock · Input source · Meeting (EventKit) · Keep awake (an owl: click keeps the Mac and display awake, like caffeinate; the input lock switches it on while locked) · Input lock (global shortcut or click blocks all keyboards and mice until the unlock chord, default ⌃⌥⌘L for both; keeps the Mac awake while locked; the first use shows an explanation and asks for approval) · Spacer
 
 ## Install
 
@@ -60,6 +60,7 @@ open barrly://refresh         # refresh every widget
 open barrly://settings        # open the Settings window (also: right‑click the Apple logo)
 open barrly://lock            # block all keyboards and mice until the unlock chord (also: lock/on, lock/off)
 open barrly://awake           # toggle keep-awake (also: awake/on, awake/off)
+open barrly://claude          # open the Claude Code session list
 ```
 
 Launch at login: `brew services start barrly`, Settings › Advanced, or from AeroSpace:

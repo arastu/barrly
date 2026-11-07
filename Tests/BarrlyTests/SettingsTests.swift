@@ -31,7 +31,7 @@ import Testing
 
   @Test func defaultLayoutMatchesSketchybar() {
     let l = Settings.default.layout
-    #expect(l.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
+    #expect(l.left.map(\.name) == ["Navigation", "Now playing", "Meeting", "Claude Code"])
     #expect(l.right.map(\.name) == ["Status"])
     #expect(l.left[2].tint == .lavender)
     #expect(l.allWidgets.filter { $0.hiddenInZen }.map(\.kind) == [.nowPlaying, .cpu, .ram, .wifi, .volume, .jalaliDate, .inputSource])
@@ -42,8 +42,8 @@ import Testing
     s.version = 1
     let meeting = s.layout.left.remove(at: 2); s.layout.right.append(meeting)
     s.migrate()
-    #expect(s.version == 7)
-    #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting"])
+    #expect(s.version == 8)
+    #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting", "Claude Code"])
     #expect(s.layout.right.map(\.name) == ["Status"])
   }
 
@@ -52,7 +52,7 @@ import Testing
     s.version = 2
     s.layout.right[0].widgets.removeAll { $0.kind == .volume }
     s.migrate()
-    #expect(s.version == 7)
+    #expect(s.version == 8)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .volume) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
     #expect(kinds.filter { $0 == .volume }.count == 1)
@@ -65,7 +65,7 @@ import Testing
     s.version = 3
     s.layout.right[0].widgets.removeAll { $0.kind == .vpn }
     s.migrate()
-    #expect(s.version == 7)
+    #expect(s.version == 8)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .vpn) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
     #expect(kinds.filter { $0 == .vpn }.count == 1)
@@ -76,7 +76,7 @@ import Testing
     s.version = 4
     s.layout.right[0].widgets.removeAll { $0.kind == .inputLock }
     s.migrate()
-    #expect(s.version == 7)
+    #expect(s.version == 8)
     #expect(s.layout.right[0].widgets.last?.kind == .inputLock)
     #expect(s.layout.allWidgets.filter { $0.kind == .inputLock }.count == 1)
   }
@@ -86,7 +86,7 @@ import Testing
     s.version = 5
     s.layout.right[0].widgets.removeAll { $0.kind == .keepAwake }
     s.migrate()
-    #expect(s.version == 7)
+    #expect(s.version == 8)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .keepAwake) == kinds.firstIndex(of: .inputLock).map { $0 - 1 })
     #expect(kinds.filter { $0 == .keepAwake }.count == 1)
@@ -107,12 +107,30 @@ import Testing
     s.version = 6
     s.layout.right[0].widgets.removeAll { $0.kind == .rex }
     s.migrate()
-    #expect(s.version == 7)
+    #expect(s.version == 8)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .rex) == kinds.firstIndex(of: .cpu).map { $0 - 1 })
     #expect(kinds.filter { $0 == .rex }.count == 1)
     s.migrate()
     #expect(kinds == s.layout.right[0].widgets.map(\.kind))
+  }
+
+  @Test func migrationAddsClaudeAfterMeeting() {
+    var s = Settings.default
+    s.version = 7
+    s.layout.left.removeAll { $0.widgets.contains { $0.kind == .claude } }
+    s.migrate()
+    #expect(s.version == 8)
+    #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting", "Claude Code"])
+    #expect(s.layout.left[3].widgets.map(\.kind) == [.claude] && s.layout.left[3].widgets[0].options.interval == 2)
+    s.migrate()
+    #expect(s.layout.left.count == 4)
+    // Without a Meeting or Now playing capsule it goes at the end of the left side.
+    var bare = Settings.default
+    bare.version = 7
+    bare.layout.left = [bare.layout.left[0]]
+    bare.migrate()
+    #expect(bare.layout.left.map(\.name) == ["Navigation", "Claude Code"])
   }
 
   @Test func themeResolution() {

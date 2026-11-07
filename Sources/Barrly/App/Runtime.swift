@@ -26,12 +26,14 @@ final class Runtime {
   @ObservationIgnored private var _volume: VolumeProvider? = nil
   @ObservationIgnored private var _vpn: VPNProvider? = nil
   @ObservationIgnored private var _rex: RexProvider? = nil
+  @ObservationIgnored private var _claude: ClaudeProvider? = nil
 
   var nowPlaying: NowPlayingProvider { if _nowPlaying == nil { _nowPlaying = NowPlayingProvider(scheduler: scheduler) }; return _nowPlaying! }
   var calendar: CalendarProvider { if _calendar == nil { _calendar = CalendarProvider(scheduler: scheduler) }; return _calendar! }
   var volume: VolumeProvider { if _volume == nil { _volume = VolumeProvider() }; return _volume! }
   var vpn: VPNProvider { if _vpn == nil { _vpn = VPNProvider(scheduler: scheduler) }; return _vpn! }
   var rex: RexProvider { if _rex == nil { _rex = RexProvider() }; return _rex! }
+  var claude: ClaudeProvider { if _claude == nil { _claude = ClaudeProvider(scheduler: scheduler, rex: rex, settings: settings) }; return _claude! }
 
   init(settings: SettingsStore = SettingsStore()) {
     self.settings = settings
@@ -62,6 +64,7 @@ final class Runtime {
     case .volume: return volume.state.present
     case .vpn: return vpn.state.active
     case .rex: return rex.state.connected
+    case .claude: return claude.cliPath != nil && (!spec.options.claudeHideWhenEmpty || !claude.rows.isEmpty)
     default: return true
     }
   }
@@ -86,7 +89,7 @@ final class Runtime {
   func refreshAll() {
     scheduler.fireAll()
     aerospace.refreshNow()
-    inputSource.refresh(); network.refresh(); battery.refresh(); appearance.refresh(); _volume?.refresh(); _vpn?.reloadServices(); _rex?.refreshNow()
+    inputSource.refresh(); network.refresh(); battery.refresh(); appearance.refresh(); _volume?.refresh(); _vpn?.reloadServices(); _rex?.refreshNow(); _claude?.refresh()
   }
 
   /// Open an app by display name ("Calendar", "Activity Monitor") or bundle id. No shell involved.
@@ -121,6 +124,7 @@ final class Runtime {
     case "awake/on": keepAwake.setManual(true)
     case "awake/off": keepAwake.setManual(false)
     case "settings": showSettings()
+    case "claude": claude.requestPopup()
     default: log.warning("unknown url: \(url)")
     }
   }

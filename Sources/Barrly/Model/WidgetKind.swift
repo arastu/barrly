@@ -2,7 +2,7 @@ import Foundation
 
 /// Every widget Barrly ships. There is no plugin system: this enum is the catalogue.
 enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
-  case appleMenu, workspaces, frontApp, nowPlaying, rex
+  case appleMenu, workspaces, frontApp, nowPlaying, claude, rex
   case cpu, ram, wifi, battery, jalaliDate, clock, inputSource, meeting, volume, vpn, keepAwake, inputLock
   case spacer
 
@@ -14,6 +14,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .workspaces: "Workspaces"
     case .frontApp: "Front app"
     case .nowPlaying: "Now playing"
+    case .claude: "Claude Code"
     case .rex: "Rex"
     case .cpu: "CPU"
     case .ram: "Memory"
@@ -37,6 +38,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .workspaces: "square.grid.3x3"
     case .frontApp: "macwindow"
     case .nowPlaying: "music.note"
+    case .claude: "cup.and.saucer.fill"
     case .rex: "terminal"
     case .cpu: "cpu"
     case .ram: "memorychip"
@@ -71,6 +73,7 @@ enum WidgetKind: String, Codable, CaseIterable, Sendable, Identifiable {
     case .vpn: .green
     case .keepAwake: .lavender   // asleep; the awake owl lights up peach
     case .inputLock: .yellow
+    case .claude: .green   // only for the cup, shown when the Claude app is not installed
     case .appleMenu, .workspaces, .frontApp, .spacer: nil
     }
   }

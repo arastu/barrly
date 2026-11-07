@@ -43,6 +43,10 @@ struct WidgetOptions: Codable, Hashable, Sendable {
   // meeting
   var clipChars: Int = 16
   var soonMinutes: Int = 10
+  // claude code
+  var claudeSession: String = ""        // Rex session (label) new tabs open in; "" = one named Claude, created if needed
+  var collapsedSections: [Int] = []     // collapsed sections of the widget's list panel (Claude Code groups, Rex states)
+  var claudeHideWhenEmpty: Bool = false // hide the cup while there are no sessions
   // spacer
   var width: Double = 10
   // icon colour: "auto" (follow the global toggle + the widget's default), "none", or an AccentToken raw value
@@ -79,6 +83,9 @@ struct WidgetOptions: Codable, Hashable, Sendable {
     inputSourceMap = try c.decodeIfPresent([String: String].self, forKey: .inputSourceMap) ?? d.inputSourceMap
     clipChars = try c.decodeIfPresent(Int.self, forKey: .clipChars) ?? d.clipChars
     soonMinutes = try c.decodeIfPresent(Int.self, forKey: .soonMinutes) ?? d.soonMinutes
+    claudeSession = try c.decodeIfPresent(String.self, forKey: .claudeSession) ?? d.claudeSession
+    collapsedSections = try c.decodeIfPresent([Int].self, forKey: .collapsedSections) ?? d.collapsedSections
+    claudeHideWhenEmpty = try c.decodeIfPresent(Bool.self, forKey: .claudeHideWhenEmpty) ?? d.claudeHideWhenEmpty
     width = try c.decodeIfPresent(Double.self, forKey: .width) ?? d.width
     iconTint = try c.decodeIfPresent(String.self, forKey: .iconTint) ?? d.iconTint
   }

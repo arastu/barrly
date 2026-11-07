@@ -6,36 +6,99 @@ import SwiftUI
 /// bar sits below normal windows. This panel floats at pop-up-menu level, above everything.
 @MainActor
 final class PopupPanel {
+  /// Hover popups (one at a time).
   static let shared = PopupPanel()
+  /// The Claude Code session list, opened by a click; its own panel so a hover popup doesn't replace it.
+  static let sessions = PopupPanel()
   private var panel: NSPanel? = nil
   private var hosted: NSHostingView<AnyView>? = nil
-  private var token: Any? = nil
+  private var monitors: [Any] = []
+  private var anchor: CGRect = .zero
 
-  func show<V: View>(_ content: V, anchor: CGRect, parent: NSWindow?, theme: ResolvedTheme) {
+  var isVisible: Bool { panel?.isVisible ?? false }
+  /// Which chip opened the panel, so a click on it closes the panel and a click on another chip swaps the content.
+  private(set) var owner: UUID? = nil
+
+  /// Click on a chip: closes the panel if this chip opened it, otherwise shows `content` under `anchor`.
+  func toggle<V: View>(owner id: UUID, _ content: V, anchor: CGRect, parent: NSWindow?, theme: ResolvedTheme) {
+    if isVisible, owner == id { hide(); return }
+    owner = id
+    show(content, anchor: anchor, parent: parent, theme: theme, untilClickedOutside: true, sizedByContent: false)
+  }
+
+  /// Shows `content` under `anchor` (screen coordinates). With `untilClickedOutside`, the panel stays
+  /// until a click lands outside it (a click on the anchor is left to the anchor, which toggles).
+  /// `sizedByContent`: the panel takes the content's intrinsic size (hover popups). A list panel
+  /// passes false: it reports its measured size through `resize(to:)` instead, because a hosting
+  /// view with the intrinsic-size option resizes itself to its content.
+  func show<V: View>(_ content: V, anchor: CGRect, parent: NSWindow?, theme: ResolvedTheme,
+                     untilClickedOutside: Bool = false, sizedByContent: Bool = true) {
+    // Glass is drawn by SwiftUI and the hosting view is the panel's content view, so AppKit keeps
+    // it exactly the panel's size; a hosting view nested in an NSGlassEffectView kept stale sizes.
+    let rooted = AnyView(content.environment(\.theme, theme)
+      .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous)))
     let host: NSHostingView<AnyView>
-    if let hosted { host = hosted; host.rootView = AnyView(content.environment(\.theme, theme)) }
-    else { host = NSHostingView(rootView: AnyView(content.environment(\.theme, theme))); hosted = host }
-    host.sizingOptions = [.intrinsicContentSize]
-    let size = host.intrinsicContentSize
+    if let hosted { host = hosted; host.rootView = rooted }
+    else { host = NSHostingView(rootView: rooted); hosted = host }
+    host.sizingOptions = sizedByContent ? [.intrinsicContentSize] : []
     let p: NSPanel
     if let panel { p = panel } else {
       p = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
       p.isFloatingPanel = true; p.hidesOnDeactivate = false; p.backgroundColor = .clear; p.isOpaque = false; p.hasShadow = true
       p.level = .popUpMenu; p.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenAuxiliary]
       p.isReleasedWhenClosed = false; p.animationBehavior = .utilityWindow
-      let glass = NSGlassEffectView(); glass.style = .regular; glass.cornerRadius = 14
-      glass.contentView = host; host.autoresizingMask = [.width, .height]
-      p.contentView = glass
+      // Hover highlights without activating: a non-key window gets mouse-moved events only on request.
+      p.acceptsMouseMovedEvents = true
+      p.contentView = host
       panel = p
     }
-    let x = anchor.midX - size.width / 2
-    let y = anchor.minY - size.height - 6
-    p.setFrame(CGRect(x: x, y: y, width: size.width, height: size.height), display: true)
+    self.anchor = anchor
+    p.setFrame(frame(for: sizedByContent ? host.fittingSize : CGSize(width: 340, height: 40)), display: true)
     _ = parent
     p.orderFrontRegardless()
+    removeMonitors()
+    if untilClickedOutside { watchForOutsideClicks() }
   }
 
-  func hide() { panel?.orderOut(nil) }
+  /// Follows the content when its size changes (the list grows or shrinks).
+  func resize(to size: CGSize) {
+    guard let panel, panel.isVisible, panel.frame.size != size else { return }
+    panel.setFrame(frame(for: size), display: true)
+  }
+
+  /// Centred under the anchor, kept inside the anchor's screen.
+  private func frame(for size: CGSize) -> CGRect {
+    var x = anchor.midX - size.width / 2
+    let y = anchor.minY - size.height - 6
+    if let screen = NSScreen.screens.first(where: { $0.frame.contains(CGPoint(x: anchor.midX, y: anchor.midY)) }) ?? NSScreen.main {
+      let v = screen.visibleFrame
+      x = min(max(x, v.minX + 8), max(v.minX + 8, v.maxX - size.width - 8))
+    }
+    return CGRect(x: x, y: y, width: size.width, height: size.height)
+  }
+
+  private func watchForOutsideClicks() {
+    let mask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+    if let m = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { [weak self] _ in
+      Task { @MainActor [weak self] in self?.clickedOutside(at: NSEvent.mouseLocation) }
+    }) { monitors.append(m) }
+    if let m = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { [weak self] event in
+      MainActor.assumeIsolated {
+        guard let self, event.window !== self.panel else { return }
+        self.clickedOutside(at: NSEvent.mouseLocation)
+      }
+      return event
+    }) { monitors.append(m) }
+  }
+
+  private func clickedOutside(at point: CGPoint) {
+    guard let panel, panel.isVisible, !panel.frame.contains(point), !anchor.contains(point) else { return }
+    hide()
+  }
+
+  private func removeMonitors() { monitors.forEach { NSEvent.removeMonitor($0) }; monitors.removeAll() }
+
+  func hide() { removeMonitors(); owner = nil; panel?.orderOut(nil) }
 }
 
 /// Keeps a handle to an invisible NSView inside the SwiftUI hierarchy so the on-screen frame
@@ -50,7 +113,7 @@ final class AnchorBox {
   var window: NSWindow? { view?.window }
 }
 
-private struct AnchorView: NSViewRepresentable {
+struct AnchorView: NSViewRepresentable {
   let box: AnchorBox
   func makeNSView(context: Context) -> NSView { let v = NSView(); box.view = v; return v }
   func updateNSView(_ v: NSView, context: Context) { box.view = v }

@@ -72,6 +72,7 @@ struct KindIcon: View {
   let kind: WidgetKind
   var body: some View {
     if kind == .keepAwake { Image(nsImage: OwlShape.templateImage(awake: true, size: 15)) }
+    else if kind == .claude, let icon = AppIconCache.shared.icon(bundleId: ClaudeWidget.claudeAppBundleID, size: 15) { Image(nsImage: icon) }
     else { Image(systemName: kind.symbol) }
   }
 }
@@ -201,15 +202,39 @@ struct WidgetOptionsPane: View {
           TextField("Open on click (default: VPN settings)", text: o(\.clickApp).orEmpty)
           Text(runtime.vpn.state.active ? "Connected: " + runtime.vpn.state.connections.map(\.name).joined(separator: ", ") : "No VPN connected. The widget appears only while one is.").font(.caption).foregroundStyle(.secondary)
         }
+      case .claude:
+        Section("Claude Code") {
+          let sessions = runtime.rex.state.sessions.map(\.label)
+          let chosen = spec.options.claudeSession
+          // Keep a chosen session that has since gone, so the picker still shows the selection.
+          let choices = chosen.isEmpty || sessions.contains(chosen) ? sessions : [chosen] + sessions
+          Picker("New tabs open in", selection: o(\.claudeSession)) {
+            Text("Not chosen (uses “\(ClaudeProvider.defaultSessionLabel)”)").tag("")
+            ForEach(choices, id: \.self) { Text($0).tag($0) }
+          }
+          Stepper("Refresh every \(Int(spec.options.interval)) s", value: o(\.interval), in: 1...60)
+          Toggle("Hide while there are no sessions", isOn: o(\.claudeHideWhenEmpty))
+          if runtime.claude.cliPath == nil {
+            Text("The claude command was not found. Install Claude Code, or set BARRLY_CLAUDE_CLI to its path.").font(.caption).foregroundStyle(.red)
+          }
+          if runtime.rex.cliPath == nil {
+            Text("The rex command was not found. Install Rex, or set BARRLY_REX_CLI to its path.").font(.caption).foregroundStyle(.red)
+          }
+          Text("The cup counts the sessions in Needs input and Ready for review; click lists every Claude Code session on this Mac, grouped by status, with what it is doing, its Rex location, working directory and age. "
+               + "Clicking a session in a Rex pane goes to that pane; a background agent opens in a new Rex tab running claude attach; an interactive session outside Rex can't be taken over. "
+               + "Going to a pane needs Remote Control on in Rex's settings, under Rex Server. Also: barrly://claude opens the list. "
+               + "Barrly runs claude agents --json and reads the session, job and PR files under ~/.claude; these are Claude Code's internal formats, so an update could change how sessions are grouped.").font(.caption).foregroundStyle(.secondary)
+          if let e = runtime.claude.error { Text(e).font(.caption).foregroundStyle(.red) }
+        }
       case .rex:
         Section("Rex") {
           Toggle("Show session count", isOn: o(\.showName))
           Stepper("Label length: \(spec.options.clipChars)", value: o(\.clipChars), in: 6...40)
-          TextField("Open on click (default: Rex)", text: o(\.clickApp).orEmpty)
+          TextField("Open on click (default: the session list)", text: o(\.clickApp).orEmpty)
           if runtime.rex.cliPath == nil {
             Text("The rex command was not found. Install Rex, or set BARRLY_REX_CLI to its path.").font(.caption).foregroundStyle(.red)
           } else if runtime.rex.state.connected {
-            Text("Sessions: " + (runtime.rex.state.sessions.isEmpty ? "none" : runtime.rex.state.sessions.map(\.label).joined(separator: ", ")) + ". A program that reports its status (OSC 7501) tints the chip; click goes to the session waiting on you. That needs Remote Control on in Rex's settings, under Rex Server.").font(.caption).foregroundStyle(.secondary)
+            Text("Sessions: " + (runtime.rex.state.sessions.isEmpty ? "none" : runtime.rex.state.sessions.map(\.label).joined(separator: ", ")) + ". A program that reports its status (OSC 7501) tints the chip. Click lists every session and the process in each of its panes, like Rex's block switcher; a pane in the list opens in Rex. That needs Remote Control on in Rex's settings, under Rex Server.").font(.caption).foregroundStyle(.secondary)
           } else {
             Text("Rex isn't running. The widget appears only while it is." + (runtime.rex.lastError.map { " (\($0))" } ?? "")).font(.caption).foregroundStyle(.secondary)
           }

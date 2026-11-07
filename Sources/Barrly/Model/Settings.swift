@@ -82,7 +82,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 7
+  var version: Int = 8
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
@@ -144,6 +144,14 @@ struct Settings: Codable, Hashable, Sendable {
       }
       version = 7
     }
+    if version < 8 {
+      // v8: the Claude Code sessions widget gets its own capsule on the left, right after Meeting.
+      if !layout.allWidgets.contains(where: { $0.kind == .claude }) {
+        let after = layout.left.lastIndex { $0.widgets.contains { $0.kind == .meeting || $0.kind == .nowPlaying } }.map { $0 + 1 } ?? layout.left.count
+        layout.left.insert(Surface(name: "Claude Code", widgets: [WidgetSpec(.claude) { $0.interval = 2 }]), at: after)
+      }
+      version = 8
+    }
   }
 
   /// Reproduces the user's sketchybar bar exactly.
@@ -161,6 +169,9 @@ struct Settings: Codable, Hashable, Sendable {
         ]),
         Surface(name: "Meeting", tint: .lavender, widgets: [
           WidgetSpec(.meeting),
+        ]),
+        Surface(name: "Claude Code", widgets: [
+          WidgetSpec(.claude) { $0.interval = 2 },
         ]),
       ],
       center: [],
