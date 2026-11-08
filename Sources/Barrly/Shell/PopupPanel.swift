@@ -33,14 +33,17 @@ final class PopupPanel {
   /// view with the intrinsic-size option resizes itself to its content.
   func show<V: View>(_ content: V, anchor: CGRect, parent: NSWindow?, theme: ResolvedTheme,
                      untilClickedOutside: Bool = false, sizedByContent: Bool = true) {
-    // Glass is drawn by SwiftUI and the hosting view is the panel's content view, so AppKit keeps
-    // it exactly the panel's size; a hosting view nested in an NSGlassEffectView kept stale sizes.
+    // Glass is drawn by SwiftUI; the hosting view fills a plain container that is the panel's content
+    // view (a hosting view nested in an NSGlassEffectView kept stale sizes).
     let rooted = AnyView(content.environment(\.theme, theme)
       .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous)))
     let host: NSHostingView<AnyView>
     if let hosted { host = hosted; host.rootView = rooted }
     else { host = NSHostingView(rootView: rooted); hosted = host }
-    host.sizingOptions = sizedByContent ? [.intrinsicContentSize] : []
+    // Measure the content with the intrinsic-size option, then size the panel explicitly.
+    host.sizingOptions = [.intrinsicContentSize]
+    let size = sizedByContent ? host.intrinsicContentSize : CGSize(width: 340, height: 40)
+    host.sizingOptions = []
     let p: NSPanel
     if let panel { p = panel } else {
       p = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -49,11 +52,18 @@ final class PopupPanel {
       p.isReleasedWhenClosed = false; p.animationBehavior = .utilityWindow
       // Hover highlights without activating: a non-key window gets mouse-moved events only on request.
       p.acceptsMouseMovedEvents = true
-      p.contentView = host
+      // The hosting view must not be the panel's content view: in that role it manages the window's
+      // size extrema from its own constraints pass, and on macOS 27 that re-enters the pass until
+      // AppKit raises, killing the app the moment a hover popup opens.
+      let container = NSView()
+      host.autoresizingMask = [.width, .height]
+      container.addSubview(host)
+      p.contentView = container
       panel = p
     }
     self.anchor = anchor
-    p.setFrame(frame(for: sizedByContent ? host.fittingSize : CGSize(width: 340, height: 40)), display: true)
+    p.setFrame(frame(for: size), display: true)
+    host.frame = p.contentView?.bounds ?? .zero
     _ = parent
     p.orderFrontRegardless()
     removeMonitors()
