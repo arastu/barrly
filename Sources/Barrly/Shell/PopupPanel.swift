@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 import SwiftUI
 
 /// A small non-activating glass panel anchored under a bar item (meeting details, etc.).
@@ -14,6 +15,11 @@ final class PopupPanel {
   private var hosted: NSHostingView<AnyView>? = nil
   private var monitors: [Any] = []
   private var anchor: CGRect = .zero
+  /// The last size a list panel reported through `resize(to:)`. A list keeps its SwiftUI state between
+  /// openings, so its geometry does not change on a re-open and it reports nothing; the panel starts
+  /// from this instead of the placeholder size, which otherwise left it a 40-point strip.
+  private var listSize: CGSize? = nil
+  private let log = Logger(subsystem: "dev.barrly", category: "popup")
 
   var isVisible: Bool { panel?.isVisible ?? false }
   /// Which chip opened the panel, so a click on it closes the panel and a click on another chip swaps the content.
@@ -21,6 +27,7 @@ final class PopupPanel {
 
   /// Click on a chip: closes the panel if this chip opened it, otherwise shows `content` under `anchor`.
   func toggle<V: View>(owner id: UUID, _ content: V, anchor: CGRect, parent: NSWindow?, theme: ResolvedTheme) {
+    log.debug("toggle: visible=\(self.isVisible) sameOwner=\(self.owner == id)")
     if isVisible, owner == id { hide(); return }
     owner = id
     show(content, anchor: anchor, parent: parent, theme: theme, untilClickedOutside: true, sizedByContent: false)
@@ -42,7 +49,7 @@ final class PopupPanel {
     else { host = NSHostingView(rootView: rooted); hosted = host }
     // Measure the content with the intrinsic-size option, then size the panel explicitly.
     host.sizingOptions = [.intrinsicContentSize]
-    let size = sizedByContent ? host.intrinsicContentSize : CGSize(width: 340, height: 40)
+    let size = sizedByContent ? host.intrinsicContentSize : (listSize ?? CGSize(width: 340, height: 40))
     host.sizingOptions = []
     let p: NSPanel
     if let panel { p = panel } else {
@@ -62,6 +69,7 @@ final class PopupPanel {
       panel = p
     }
     self.anchor = anchor
+    log.debug("show: size=\(size.width)x\(size.height) sizedByContent=\(sizedByContent)")
     p.setFrame(frame(for: size), display: true)
     host.frame = p.contentView?.bounds ?? .zero
     _ = parent
@@ -72,6 +80,9 @@ final class PopupPanel {
 
   /// Follows the content when its size changes (the list grows or shrinks).
   func resize(to size: CGSize) {
+    // The list reports 0 before its first layout; a zero-height window would never lay out again.
+    guard size.height >= 1 else { return }
+    listSize = size
     guard let panel, panel.isVisible, panel.frame.size != size else { return }
     panel.setFrame(frame(for: size), display: true)
   }
@@ -108,7 +119,7 @@ final class PopupPanel {
 
   private func removeMonitors() { monitors.forEach { NSEvent.removeMonitor($0) }; monitors.removeAll() }
 
-  func hide() { removeMonitors(); owner = nil; panel?.orderOut(nil) }
+  func hide() { log.debug("hide"); removeMonitors(); owner = nil; panel?.orderOut(nil) }
 }
 
 /// Keeps a handle to an invisible NSView inside the SwiftUI hierarchy so the on-screen frame

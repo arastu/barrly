@@ -1,4 +1,7 @@
+import OSLog
 import SwiftUI
+
+private let cellLog = Logger(subsystem: "dev.barrly", category: "cell")
 
 /// The standard chip: icon + label on a concentric lozenge that lights up on hover
 /// ("controls come to life when a person interacts with them").
@@ -28,7 +31,7 @@ struct WidgetCell<Content: View>: View {
       .animation(theme.hoverAnimation, value: lit)
       .contentShape(Rectangle())
       .onHover { hovered = $0 }
-      .onTapGesture { onClick?() }
+      .onTapGesture { cellLog.debug("tap: \(String(describing: spec.kind))"); onClick?() }
       .contextMenu { if let onRightClick { Button("Barrly Settings…") { onRightClick() } } }
   }
 }
