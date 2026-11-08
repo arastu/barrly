@@ -42,7 +42,7 @@ import Testing
     s.version = 1
     let meeting = s.layout.left.remove(at: 2); s.layout.right.append(meeting)
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting", "Claude Code"])
     #expect(s.layout.right.map(\.name) == ["Status"])
   }
@@ -52,7 +52,7 @@ import Testing
     s.version = 2
     s.layout.right[0].widgets.removeAll { $0.kind == .volume }
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .volume) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
     #expect(kinds.filter { $0 == .volume }.count == 1)
@@ -65,7 +65,7 @@ import Testing
     s.version = 3
     s.layout.right[0].widgets.removeAll { $0.kind == .vpn }
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .vpn) == kinds.firstIndex(of: .wifi).map { $0 + 1 })
     #expect(kinds.filter { $0 == .vpn }.count == 1)
@@ -76,7 +76,7 @@ import Testing
     s.version = 4
     s.layout.right[0].widgets.removeAll { $0.kind == .inputLock }
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     #expect(s.layout.right[0].widgets.last?.kind == .inputLock)
     #expect(s.layout.allWidgets.filter { $0.kind == .inputLock }.count == 1)
   }
@@ -86,7 +86,7 @@ import Testing
     s.version = 5
     s.layout.right[0].widgets.removeAll { $0.kind == .keepAwake }
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .keepAwake) == kinds.firstIndex(of: .inputLock).map { $0 - 1 })
     #expect(kinds.filter { $0 == .keepAwake }.count == 1)
@@ -107,7 +107,7 @@ import Testing
     s.version = 6
     s.layout.right[0].widgets.removeAll { $0.kind == .rex }
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     let kinds = s.layout.right[0].widgets.map(\.kind)
     #expect(kinds.firstIndex(of: .rex) == kinds.firstIndex(of: .cpu).map { $0 - 1 })
     #expect(kinds.filter { $0 == .rex }.count == 1)
@@ -115,12 +115,35 @@ import Testing
     #expect(kinds == s.layout.right[0].widgets.map(\.kind))
   }
 
+  @Test func migrationDropsVPNVolumeBatteryLabels() {
+    var s = Settings.default
+    s.version = 8
+    for i in s.layout.right[0].widgets.indices {
+      s.layout.right[0].widgets[i].options.showName = true
+      s.layout.right[0].widgets[i].options.showPercent = true
+    }
+    s.migrate()
+    #expect(s.version == 9)
+    let w = s.layout.right[0].widgets
+    #expect(w.first { $0.kind == .vpn }?.options.showName == false)
+    #expect(w.first { $0.kind == .volume }?.options.showPercent == false)
+    #expect(w.first { $0.kind == .battery }?.options.showPercent == false)
+    #expect(w.first { $0.kind == .wifi }?.options.showPercent == true)   // other widgets keep their options
+  }
+
+  @Test func defaultVPNVolumeBatteryAreIconOnly() {
+    let w = Settings.default.layout.right[0].widgets
+    #expect(w.first { $0.kind == .vpn }?.options.showName == false)
+    #expect(w.first { $0.kind == .volume }?.options.showPercent == false)
+    #expect(w.first { $0.kind == .battery }?.options.showPercent == false)
+  }
+
   @Test func migrationAddsClaudeAfterMeeting() {
     var s = Settings.default
     s.version = 7
     s.layout.left.removeAll { $0.widgets.contains { $0.kind == .claude } }
     s.migrate()
-    #expect(s.version == 8)
+    #expect(s.version == 9)
     #expect(s.layout.left.map(\.name) == ["Navigation", "Now playing", "Meeting", "Claude Code"])
     #expect(s.layout.left[3].widgets.map(\.kind) == [.claude] && s.layout.left[3].widgets[0].options.interval == 2)
     s.migrate()

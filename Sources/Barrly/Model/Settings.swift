@@ -82,7 +82,7 @@ struct AppearanceSettings: Codable, Hashable, Sendable {
 }
 
 struct Settings: Codable, Hashable, Sendable {
-  var version: Int = 8
+  var version: Int = 9
   var layout: Layout
   var appearance: AppearanceSettings = AppearanceSettings()
   var launchAtLogin: Bool = false
@@ -152,6 +152,21 @@ struct Settings: Codable, Hashable, Sendable {
       }
       version = 8
     }
+    if version < 9 {
+      // v9: VPN, volume and battery show only their icon; the labels stay available as toggles.
+      for side in Side.allCases {
+        for s in layout[side].indices {
+          for w in layout[side][s].widgets.indices {
+            switch layout[side][s].widgets[w].kind {
+            case .vpn: layout[side][s].widgets[w].options.showName = false
+            case .volume, .battery: layout[side][s].widgets[w].options.showPercent = false
+            default: break
+            }
+          }
+        }
+      }
+      version = 9
+    }
   }
 
   /// Reproduces the user's sketchybar bar exactly.
@@ -181,9 +196,9 @@ struct Settings: Codable, Hashable, Sendable {
           WidgetSpec(.cpu, hiddenInZen: true, secondary: true),
           WidgetSpec(.ram, hiddenInZen: true, secondary: true),
           WidgetSpec(.wifi, hiddenInZen: true),
-          WidgetSpec(.vpn),
-          WidgetSpec(.volume, hiddenInZen: true),
-          WidgetSpec(.battery, hoverable: false),
+          WidgetSpec(.vpn) { $0.showName = false },
+          WidgetSpec(.volume, hiddenInZen: true) { $0.showPercent = false },
+          WidgetSpec(.battery, hoverable: false) { $0.showPercent = false },
           WidgetSpec(.spacer, hoverable: false),
           WidgetSpec(.jalaliDate, hiddenInZen: true, secondary: true) { $0.clickApp = "Roozegar" },
           WidgetSpec(.clock) { $0.clickApp = "Calendar" },
