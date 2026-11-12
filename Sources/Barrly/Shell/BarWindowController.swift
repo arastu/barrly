@@ -16,6 +16,7 @@ final class BarWindowController {
   private var stacks: [Side: NSStackView] = [:]
   private var glass: [UUID: GlassSurfaceView] = [:]
   private var structure: [Side: [UUID]] = [:]
+  private var spaceToken: NSObjectProtocol? = nil
 
   init(runtime: Runtime, screen: NSScreen) {
     self.runtime = runtime; self.screen = screen; self.screenID = screen.displayID
@@ -45,12 +46,23 @@ final class BarWindowController {
       }
     }
     observe()
-    panel.orderFrontRegardless()
+    spaceToken = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { _ in
+      Task { @MainActor [weak self] in self?.updateVisibility() }
+    }
+    updateVisibility()
   }
 
-  func attach(to screen: NSScreen) { self.screen = screen; screenID = screen.displayID; relayout() }
+  func attach(to screen: NSScreen) { self.screen = screen; screenID = screen.displayID; relayout(); updateVisibility() }
 
-  func close() { panel.orderOut(nil); panel.close() }
+  func close() {
+    if let spaceToken { NSWorkspace.shared.notificationCenter.removeObserver(spaceToken) }
+    panel.orderOut(nil); panel.close()
+  }
+
+  /// The bar steps aside while its screen shows a fullscreen Space.
+  private func updateVisibility() {
+    if screen.isShowingFullscreenSpace { panel.orderOut(nil) } else { panel.orderFrontRegardless() }
+  }
 
   /// Position: the bar lives in the (auto-hidden) menu bar strip unless the menu bar is visible.
   static func frame(for screen: NSScreen, appearance a: AppearanceSettings) -> CGRect {
