@@ -17,6 +17,9 @@ final class BarWindowController {
   private var glass: [UUID: GlassSurfaceView] = [:]
   private var structure: [Side: [UUID]] = [:]
   private var spaceToken: NSObjectProtocol? = nil
+  private var pointerMonitors: [Any] = []
+  private var edgeDwell: DispatchWorkItem? = nil
+  private var steppedAside = false
 
   init(runtime: Runtime, screen: NSScreen) {
     self.runtime = runtime; self.screen = screen; self.screenID = screen.displayID
@@ -50,13 +53,56 @@ final class BarWindowController {
       Task { @MainActor [weak self] in self?.updateVisibility() }
     }
     updateVisibility()
+    if #available(macOS 27, *) { watchPointer() }
   }
 
   func attach(to screen: NSScreen) { self.screen = screen; screenID = screen.displayID; relayout(); updateVisibility() }
 
   func close() {
     if let spaceToken { NSWorkspace.shared.notificationCenter.removeObserver(spaceToken) }
+    for m in pointerMonitors { NSEvent.removeMonitor(m) }
+    pointerMonitors.removeAll(); edgeDwell?.cancel()
     panel.orderOut(nil); panel.close()
+  }
+
+  /// macOS 27 leaves the auto-hidden menu bar's window over the strip, where it takes every click and
+  /// hover aimed at a window below it. There the bar sits above the menu bar instead.
+  private var underHiddenMenuBar: Bool {
+    guard #available(macOS 27, *) else { return false }
+    return UserDefaults.standard.bool(forKey: "_HIHideMenuBar")
+  }
+
+  private func applyLevel() {
+    panel.apply(topmost: runtime.settings.settings.appearance.alwaysOnTop, aboveMenuBar: underHiddenMenuBar && !steppedAside)
+  }
+
+  /// Sitting above the menu bar would cover it when it is revealed, so the bar drops back under it
+  /// once the pointer has rested on the top edge, and comes back when the pointer leaves the strip.
+  private func watchPointer() {
+    if let m = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved, handler: { [weak self] _ in
+      Task { @MainActor [weak self] in self?.pointerMoved(to: NSEvent.mouseLocation) }
+    }) { pointerMonitors.append(m) }
+    if let m = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { [weak self] event in
+      MainActor.assumeIsolated { self?.pointerMoved(to: NSEvent.mouseLocation) }
+      return event
+    }) { pointerMonitors.append(m) }
+  }
+
+  private func pointerMoved(to p: CGPoint) {
+    let onScreen = p.x >= screen.frame.minX && p.x < screen.frame.maxX
+    if steppedAside {
+      guard !onScreen || p.y < panel.frame.minY - 4 else { return }
+      steppedAside = false; applyLevel()
+    } else if onScreen, p.y >= screen.frame.maxY - 1, underHiddenMenuBar {
+      guard edgeDwell == nil else { return }
+      let work = DispatchWorkItem { [weak self] in
+        MainActor.assumeIsolated { self?.edgeDwell = nil; self?.steppedAside = true; self?.applyLevel() }
+      }
+      edgeDwell = work
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+    } else {
+      edgeDwell?.cancel(); edgeDwell = nil
+    }
   }
 
   /// The bar steps aside while its screen shows a fullscreen Space.
@@ -86,7 +132,7 @@ final class BarWindowController {
     let settings = runtime.settings.settings
     let theme = runtime.theme
     relayout(appearance: settings.appearance)
-    panel.apply(topmost: settings.appearance.alwaysOnTop)
+    applyLevel()
     for side in Side.allCases {
       let surfaces = settings.layout[side]
       let ids = surfaces.map(\.id)

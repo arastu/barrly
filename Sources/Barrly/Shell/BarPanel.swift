@@ -26,7 +26,10 @@ final class BarPanel: NSPanel {
   /// Default: just above the desktop, below app windows (backstop menu level).
   /// Always on top: floating level — above app windows but still below the system menu bar,
   /// so an auto-hidden menu bar can slide over the bar when revealed.
-  func apply(topmost: Bool) {
-    level = topmost ? .floating : NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.backstopMenu)))
+  /// Above the menu bar: one level over the status bar. macOS 27 keeps the auto-hidden menu bar's
+  /// window over the strip, and it swallows every click and hover meant for a window below it.
+  func apply(topmost: Bool, aboveMenuBar: Bool = false) {
+    if aboveMenuBar { level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1) }
+    else { level = topmost ? .floating : NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.backstopMenu))) }
   }
 }
