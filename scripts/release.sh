@@ -17,6 +17,8 @@ ROOT_URL="https://github.com/$REPO/releases/download/$TAG"
 
 [ -z "$(git status --porcelain)" ] || { echo "working tree not clean"; exit 1; }
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "tag $TAG exists"; exit 1; }
+# The app zip needs the adapter; build it now, so a failure stops the release before anything is tagged.
+[ -d Vendor/build/MediaRemoteAdapter.framework ] || scripts/build-adapter.sh
 
 echo "==> tests"; swift test 2>&1 | grep -E "Test run with|✘" | tail -3
 swift test >/dev/null 2>&1 || { echo "tests failed"; exit 1; }
@@ -60,7 +62,6 @@ for T in $(printf '%s\n' "$NATIVE_TAG" arm64_tahoe | sort -u); do
 done
 
 echo "==> app zip (self-contained: adapter inside the bundle, unlike the Homebrew layout)"
-[ -d Vendor/build/MediaRemoteAdapter.framework ] || scripts/build-adapter.sh
 swift build -c release 2>&1 | grep -E "error:" || true
 STAGE="$WORK/stage"; mkdir -p "$STAGE/MediaRemoteAdapter"
 cp -R Vendor/build/MediaRemoteAdapter.framework Vendor/build/mediaremote-adapter.pl Vendor/build/MediaRemoteAdapterTestClient "$STAGE/MediaRemoteAdapter/"

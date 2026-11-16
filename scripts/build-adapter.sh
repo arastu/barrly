@@ -7,6 +7,19 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/Vendor/mediaremote-adapter"
 OUT="$ROOT/Vendor/build"
 FW="$OUT/MediaRemoteAdapter.framework"
+
+# The source is not in this repo. A checkout fetches it at the revision the formula pins;
+# Homebrew stages its own copy there before calling this script.
+if [ ! -d "$SRC" ]; then
+  PIN="$(sed -n '/resource "mediaremote-adapter"/,/^  end/p' "$ROOT/Formula/barrly.rb")"
+  URL="$(sed -n 's/.*url "\([^"]*\)".*/\1/p' <<<"$PIN")"
+  REV="$(sed -n 's/.*revision: "\([0-9a-f]\{40\}\)".*/\1/p' <<<"$PIN")"
+  [ -n "$URL" ] && [ -n "$REV" ] || { echo "no mediaremote-adapter pin in Formula/barrly.rb"; exit 1; }
+  rm -rf "$SRC.fetch"; trap 'rm -rf "$SRC.fetch"' EXIT
+  git clone -q "$URL" "$SRC.fetch"
+  git -C "$SRC.fetch" checkout -q "$REV"
+  mv "$SRC.fetch" "$SRC"
+fi
 rm -rf "$OUT"; mkdir -p "$FW/Versions/A/Resources"
 
 ADAPTER_SOURCES=(
