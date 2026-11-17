@@ -38,6 +38,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     log.info("Barrly started")
   }
 
+  /// Refuse a Quit AppleEvent that is not part of log out / restart / shut down. macOS 27's App Intents
+  /// daemon (linkd) sends one: when Siri collects on-screen context from Barrly it "opens" the running
+  /// bar in the background, finds no App Intents to connect to, and 30 s later asks the app it thinks
+  /// it launched to quit. Our own quits (signals, the Settings button) carry no AppleEvent.
+  func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    guard let event = NSAppleEventManager.shared().currentAppleEvent,
+          event.eventID == AEEventID(kAEQuitApplication),
+          event.attributeDescriptor(forKeyword: AEKeyword(kAEQuitReason)) == nil else { return .terminateNow }
+    log.notice("ignored a Quit AppleEvent from outside the app")
+    return .terminateCancel
+  }
+
   func applicationWillTerminate(_ notification: Notification) {
     runtime.shutdown()
   }
